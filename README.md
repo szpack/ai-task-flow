@@ -1,6 +1,8 @@
-# Task Viewer
+# AI Task Flow
 
-一个面向 AI 编程工作流的轻量任务查看器，用于把零散需求沉淀成结构化任务，并生成 Codex / Claude 可执行的开发提示词。
+AI 任务流转台：把模糊需求转成结构化任务，并在 Codex / Claude 开发提示词、执行结果回填和任务追踪之间形成闭环。
+
+AI Task Flow is a lightweight, local-first workflow tool for AI-assisted development. It turns rough ideas into structured task records, sends selected tasks to AI coding agents as precise prompts, and stores structured execution results back into the same task library.
 
 ## 功能
 
@@ -11,6 +13,16 @@
 - 为选中的任务生成 Codex / Claude 开发提示词
 - 回填执行结果到 `implementation_runs`
 - 导出合并当前状态后的 `tasks.json`
+
+## 为什么不是普通任务管理器
+
+AI Task Flow 关注的是 AI 开发过程里的上下文流转：
+
+```text
+模糊想法 -> AI 结构化任务 -> 入库追踪 -> 生成开发 Prompt -> AI 执行 -> 结构化结果回填
+```
+
+它适合把产品想法、Bug、设计调整和技术债整理成可执行、可验证、可回填的任务单元，让人和 AI Agent 围绕同一份结构化数据协作。
 
 ## 本地运行
 
@@ -23,15 +35,15 @@ python3 -m http.server 8000
 然后访问：
 
 ```text
-http://localhost:8000/task-viewer.html
+http://localhost:8000/
 ```
 
 ## 文件结构
 
 ```text
 .
-├── task-viewer.html  # 单文件前端应用
-├── tasks.json        # 结构化任务数据
+├── index.html  # 单文件前端应用
+├── tasks.json  # 结构化任务数据
 └── README.md
 ```
 

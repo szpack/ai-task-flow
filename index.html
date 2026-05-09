@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Task Viewer</title>
+<meta name="description" content="AI Task Flow / AI 任务流转台: turn rough ideas into structured AI coding tasks, generate Codex or Claude prompts, and backfill execution results.">
+<title>AI Task Flow</title>
 <style>
   :root {
     --masters-bg: #0A2818;
@@ -803,8 +804,8 @@
 
 <header>
   <div class="page-heading">
-    <h1>Task Viewer</h1>
-    <div class="subtitle">需求收集 · 结构化任务 · Codex / Claude 提示词 · 执行结果回填</div>
+    <h1>AI Task Flow</h1>
+    <div class="subtitle">AI 任务流转台 · 需求结构化 · Codex / Claude 提示词 · 执行结果回填</div>
   </div>
   <button class="action-btn new-task" id="btn-new-task">+ New task</button>
 </header>
@@ -947,7 +948,8 @@
 // ============================================================
 // State
 // ============================================================
-const STORAGE_KEY = 'golfhub-task-viewer-state';
+const STORAGE_KEY = 'ai-task-flow-state';
+const LEGACY_STORAGE_KEY = 'golfhub-task-viewer-state';
 let tasksData = null;
 let state = {
   status: {},        // { taskId: 'open' | 'done' | 'skipped' }, only overrides base JSON
@@ -959,7 +961,7 @@ let state = {
 
 function loadState() {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
     if (stored) state = { ...state, ...JSON.parse(stored) };
   } catch (e) {}
 }
@@ -990,7 +992,7 @@ async function loadTasks() {
         <strong>无法加载 tasks.json</strong><br><br>
         本页面需要从同目录加载 <code>tasks.json</code>。<br>
         如果直接双击打开 HTML(<code>file://</code>),浏览器会因 CORS 拒绝读取。<br><br>
-        <strong>解决方法</strong>:在该文件目录下跑一个本地 HTTP 服务,然后访问 <code>http://localhost:8000/task-viewer.html</code>:<br><br>
+        <strong>解决方法</strong>:在该文件目录下跑一个本地 HTTP 服务,然后访问 <code>http://localhost:8000/</code>:<br><br>
         <code>cd .codex && python3 -m http.server 8000</code><br><br>
         或者直接把 tasks.json 内容粘到下方的"手动加载"区:<br>
         <textarea id="manual-json" rows="6" style="width: 100%; margin-top: 10px; font-family: 'SF Mono', monospace; font-size: 11px;" placeholder='粘贴 tasks.json 内容...'></textarea>
