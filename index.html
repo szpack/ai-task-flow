@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="AI Task Flow / AI 任务流转台: turn rough ideas into structured AI coding tasks, generate Codex or Claude prompts, and backfill execution results.">
+<meta name="description" content="AI Task Flow: turn rough ideas into structured AI coding tasks, generate Codex or Claude prompts, and backfill execution results.">
 <title>AI Task Flow</title>
 <style>
   :root {
@@ -836,18 +836,18 @@
 <header>
   <div class="page-heading">
     <h1>AI Task Flow</h1>
-    <div class="subtitle" data-i18n="subtitle">AI 任务流转台 · 需求结构化 · Codex / Claude 提示词 · 执行结果回填</div>
+    <div class="subtitle" data-i18n="subtitle">AI task flow · Structured intake · Codex / Claude prompts · Execution backfill</div>
   </div>
   <div class="header-actions">
     <div class="lang-switch" aria-label="Language">
-      <button class="lang-btn" data-lang="zh" title="中文" aria-label="中文">🇨🇳</button>
+      <button class="lang-btn" data-lang="zh" title="Chinese" aria-label="Chinese">🇨🇳</button>
       <button class="lang-btn" data-lang="en" title="English" aria-label="English">🇺🇸</button>
     </div>
     <button class="action-btn new-task" id="btn-new-task" data-i18n="newTaskButton">+ New task</button>
   </div>
 </header>
 
-<div id="loading" class="loading" data-i18n="loading">加载 tasks.json...</div>
+<div id="loading" class="loading" data-i18n="loading">Loading tasks.json...</div>
 <div id="content" style="display: none;">
 
   <div id="current-pin"></div>
@@ -869,50 +869,50 @@
 
   <div class="manager">
     <section class="manager-panel">
-      <div class="manager-title" data-i18n="runBackfillTitle">执行结果回填</div>
-      <div class="manager-copy" data-i18n="runBackfillCopy">粘贴 Codex / Claude 输出的结构化结果,写入 implementation_runs。</div>
+      <div class="manager-title" data-i18n="runBackfillTitle">Execution Backfill</div>
+      <div class="manager-copy" data-i18n="runBackfillCopy">Paste structured output from Codex or Claude and write it into implementation_runs.</div>
       <textarea class="manager-field" id="run-json" placeholder='{"task_id":"PROMPT_001","status":"done","commit":"...","summary":"..."}'></textarea>
       <div class="manager-actions">
-        <button class="action-btn primary" id="btn-apply-run" data-i18n="applyRun">回填执行结果</button>
-        <button class="action-btn" id="btn-run-template" data-i18n="copyRunTemplate">复制结果模板</button>
+        <button class="action-btn primary" id="btn-apply-run" data-i18n="applyRun">Apply result</button>
+        <button class="action-btn" id="btn-run-template" data-i18n="copyRunTemplate">Copy result template</button>
       </div>
-      <textarea class="manager-field manager-output short" id="run-result" readonly data-i18n-placeholder="runResultPlaceholder" placeholder="回填结果"></textarea>
+      <textarea class="manager-field manager-output short" id="run-result" readonly data-i18n-placeholder="runResultPlaceholder" placeholder="Backfill result"></textarea>
     </section>
   </div>
 
   <div class="filters">
     <div class="filter-group">
-      <span class="filter-group-label" data-i18n="priority">优先级</span>
-      <button class="chip" data-priority="all" data-i18n="all">全部</button>
+      <span class="filter-group-label" data-i18n="priority">Priority</span>
+      <button class="chip" data-priority="all" data-i18n="all">All</button>
       <button class="chip p0" data-priority="P0">P0</button>
       <button class="chip p1" data-priority="P1">P1</button>
       <button class="chip p2" data-priority="P2">P2</button>
     </div>
     <div class="filter-group">
-      <span class="filter-group-label" data-i18n="status">状态</span>
-      <button class="chip active" data-status="all" data-i18n="all">全部</button>
+      <span class="filter-group-label" data-i18n="status">Status</span>
+      <button class="chip active" data-status="all" data-i18n="all">All</button>
       <button class="chip" data-status="open" data-i18n="open">Open</button>
       <button class="chip" data-status="done" data-i18n="done">Done</button>
       <button class="chip" data-status="skipped" data-i18n="skipped">Skipped</button>
     </div>
-    <input type="text" class="search-bar" id="search" data-i18n-placeholder="searchPlaceholder" placeholder="搜 task ID / 标题 / 描述...">
+    <input type="text" class="search-bar" id="search" data-i18n-placeholder="searchPlaceholder" placeholder="Search task ID, title, or description...">
   </div>
 
   <div class="actions-row">
-    <button class="action-btn primary" id="btn-export" data-i18n="exportJson">导出当前状态为 JSON</button>
-    <button class="action-btn" id="btn-generate-dev-prompt" data-i18n="generateDevPrompt">生成选中任务开发提示词</button>
-    <button class="action-btn" id="btn-reset-all" data-i18n="resetAll">清除所有状态</button>
-    <button class="action-btn" id="btn-collapse-all" data-i18n="collapseAll">全部折叠</button>
+    <button class="action-btn primary" id="btn-export" data-i18n="exportJson">Export task library JSON</button>
+    <button class="action-btn" id="btn-generate-dev-prompt" data-i18n="generateDevPrompt">Generate development prompt</button>
+    <button class="action-btn" id="btn-reset-all" data-i18n="resetAll">Clear all status</button>
+    <button class="action-btn" id="btn-collapse-all" data-i18n="collapseAll">Collapse all</button>
   </div>
 
   <div class="selection-bar">
-    <span class="selection-count" id="selection-count">已选 0 个任务</span>
-    <button class="action-btn" id="btn-select-visible" data-i18n="selectVisible">选择当前筛选</button>
-    <button class="action-btn" id="btn-clear-selection" data-i18n="clearSelection">清空选择</button>
+    <span class="selection-count" id="selection-count">0 tasks selected</span>
+    <button class="action-btn" id="btn-select-visible" data-i18n="selectVisible">Select filtered tasks</button>
+    <button class="action-btn" id="btn-clear-selection" data-i18n="clearSelection">Clear selection</button>
   </div>
   <div class="field-shell">
-    <textarea class="manager-field manager-output" id="dev-prompt-output" data-i18n-placeholder="devPromptPlaceholder" placeholder="选中任务后点击生成,这里会出现给 Codex / Claude 的开发提示词"></textarea>
-    <button class="field-copy-btn" data-copy-target="dev-prompt-output" data-i18n-title="copy" data-i18n-aria="copyDevPrompt" title="复制" aria-label="复制开发提示词">⧉</button>
+    <textarea class="manager-field manager-output" id="dev-prompt-output" data-i18n-placeholder="devPromptPlaceholder" placeholder="Select tasks and generate a Codex / Claude development prompt here"></textarea>
+    <button class="field-copy-btn" data-copy-target="dev-prompt-output" data-i18n-title="copy" data-i18n-aria="copyDevPrompt" title="Copy" aria-label="Copy development prompt">⧉</button>
   </div>
 
   <div id="task-list"></div>
@@ -925,15 +925,15 @@
     <div class="modal-header">
       <div>
         <div class="modal-kicker" data-i18n="newTaskKicker">New task</div>
-        <div class="modal-title" id="new-task-title" data-i18n="newTaskTitle">需求收集箱</div>
-        <div class="manager-copy" data-i18n="newTaskCopy">先把口水话需求转成结构化任务提示词,再把 AI 返回的 JSON 导入任务库。</div>
+        <div class="modal-title" id="new-task-title" data-i18n="newTaskTitle">Intake box</div>
+        <div class="manager-copy" data-i18n="newTaskCopy">Turn a rough request into a structured task prompt, then import the JSON returned by AI.</div>
       </div>
-      <button class="modal-close" id="btn-close-new-task" data-i18n-title="close" title="关闭">×</button>
+      <button class="modal-close" id="btn-close-new-task" data-i18n-title="close" title="Close">×</button>
     </div>
     <div class="new-task-grid">
       <section class="manager-panel">
-        <div class="manager-title" data-i18n="naturalInputTitle">自然语言输入</div>
-        <div class="manager-copy" data-i18n="naturalInputCopy">写入口水话需求,生成给 AI 的结构化任务 JSON 提示词。</div>
+        <div class="manager-title" data-i18n="naturalInputTitle">Natural language input</div>
+        <div class="manager-copy" data-i18n="naturalInputCopy">Write a rough request and generate a structured task JSON prompt for AI.</div>
         <div class="manager-select-row">
           <select class="manager-select" id="intake-category">
             <option value="IDEA">Idea Intake</option>
@@ -950,25 +950,25 @@
             <option value="refactor">refactor</option>
           </select>
         </div>
-        <textarea class="manager-field" id="intake-text" data-i18n-placeholder="intakePlaceholder" placeholder="把想到的问题、需求、现象、期望用自然语言写在这里..."></textarea>
+        <textarea class="manager-field" id="intake-text" data-i18n-placeholder="intakePlaceholder" placeholder="Write the problem, request, observation, or expected result here..."></textarea>
         <div class="manager-actions">
-          <button class="action-btn primary" id="btn-generate-structure-prompt" data-i18n="generateStructurePrompt">生成结构化任务提示词</button>
+          <button class="action-btn primary" id="btn-generate-structure-prompt" data-i18n="generateStructurePrompt">Generate structured task prompt</button>
         </div>
         <div class="field-shell">
-          <textarea class="manager-field manager-output" id="structure-prompt-output" data-i18n-placeholder="structurePromptPlaceholder" placeholder="这里会生成给 AI 的提示词"></textarea>
-          <button class="field-copy-btn" data-copy-target="structure-prompt-output" data-i18n-title="copy" data-i18n-aria="copyStructurePrompt" title="复制" aria-label="复制结构化任务提示词">⧉</button>
+          <textarea class="manager-field manager-output" id="structure-prompt-output" data-i18n-placeholder="structurePromptPlaceholder" placeholder="The AI prompt will appear here"></textarea>
+          <button class="field-copy-btn" data-copy-target="structure-prompt-output" data-i18n-title="copy" data-i18n-aria="copyStructurePrompt" title="Copy" aria-label="Copy structured task prompt">⧉</button>
         </div>
       </section>
 
       <section class="manager-panel">
-        <div class="manager-title" data-i18n="jsonImportTitle">AI JSON 导入</div>
-        <div class="manager-copy" data-i18n="jsonImportCopy">粘贴 AI 生成的单个 task JSON 或 tasks 数组。无 ID 时会按分类补号。</div>
+        <div class="manager-title" data-i18n="jsonImportTitle">AI JSON Import</div>
+        <div class="manager-copy" data-i18n="jsonImportCopy">Paste a single task JSON object or a task array generated by AI. Missing IDs are assigned by category.</div>
         <textarea class="manager-field" id="import-json" placeholder='{"title":"...","type":"bug","priority":"P1",...}'></textarea>
         <div class="manager-actions">
-          <button class="action-btn primary" id="btn-import-task" data-i18n="importCurrentList">导入到当前列表</button>
-          <button class="action-btn" id="btn-validate-task" data-i18n="validateJson">校验 JSON</button>
+          <button class="action-btn primary" id="btn-import-task" data-i18n="importCurrentList">Import into current list</button>
+          <button class="action-btn" id="btn-validate-task" data-i18n="validateJson">Validate JSON</button>
         </div>
-        <textarea class="manager-field manager-output" id="import-result" readonly data-i18n-placeholder="importResultPlaceholder" placeholder="导入/校验结果"></textarea>
+        <textarea class="manager-field manager-output" id="import-result" readonly data-i18n-placeholder="importResultPlaceholder" placeholder="Import / validation result"></textarea>
       </section>
     </div>
   </div>
@@ -977,7 +977,7 @@
 <div class="toast" id="toast"></div>
 
 <footer>
-  <span data-i18n="footerText">任务库自动保存到 localStorage · 导出 tasks.json 后可提交到 Git · 示例数据见</span> <code>examples/</code>
+  <span data-i18n="footerText">Task library is auto-saved to localStorage · Export tasks.json to commit it to Git · Examples in</span> <code>examples/</code>
 </footer>
 
 <script>
@@ -991,9 +991,9 @@ const LANG_STORAGE_KEY = 'ai-task-flow-lang';
 
 const I18N = {
   zh: {
-    subtitle: 'AI 任务流转台 · 需求结构化 · Codex / Claude 提示词 · 执行结果回填',
+    subtitle: 'AI task flow · Structured intake · Codex / Claude prompts · Execution backfill',
     newTaskButton: '+ 新任务',
-    loading: '正在加载 tasks.json...',
+    loading: '正在Loading tasks.json...',
     statOpen: '待处理',
     statCurrent: '当前任务',
     statDone: '已完成',
@@ -1035,7 +1035,7 @@ const I18N = {
     importCurrentList: '导入到当前列表',
     validateJson: '校验 JSON',
     importResultPlaceholder: '导入/校验结果',
-    footerText: '任务库自动保存到 localStorage · 导出 tasks.json 后可提交到 Git · 示例数据见',
+    footerText: 'Task library is auto-saved to localStorage · Export tasks.json to commit it to Git · Examples in',
     selectedCount: count => `已选 ${count} 个任务`,
     currentTask: '当前任务',
     inProgress: '进行中',

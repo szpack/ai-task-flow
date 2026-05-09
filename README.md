@@ -1,65 +1,65 @@
 # AI Task Flow
 
-AI 任务流转台：把模糊需求转成结构化任务，并在 Codex / Claude 开发提示词、执行结果回填和任务追踪之间形成闭环。
-
 AI Task Flow is a lightweight, local-first workflow tool for AI-assisted development. It turns rough ideas into structured task records, sends selected tasks to AI coding agents as precise prompts, and stores structured execution results back into the same task library.
 
-## 功能
+中文名：AI 任务流转台。它把模糊需求转成结构化任务，并在 Codex / Claude 开发提示词、执行结果回填和任务追踪之间形成闭环。
 
-- 从 `tasks.json` 加载结构化任务
-- 根据浏览器语言自动切换中英文界面，也可手动切换
-- 按优先级、状态和关键词筛选任务
-- 钉选当前任务，标记完成或跳过
-- 将自然语言需求转换为结构化任务 JSON 提示词
-- 为选中的任务生成 Codex / Claude 开发提示词
-- 回填执行结果到 `implementation_runs`
-- 自动把当前任务库保存到浏览器 `localStorage`
-- 导出合并当前状态后的 `tasks.json`
+## Features
 
-## 为什么不是普通任务管理器
+- Load structured tasks from `tasks.json`
+- Switch between Chinese and English automatically based on browser language, with manual language controls
+- Filter tasks by priority, status, and keyword
+- Pin the current task, mark tasks as done, or skip tasks
+- Turn natural language requests into structured task JSON prompts
+- Generate Codex / Claude development prompts from selected tasks
+- Backfill execution results into `implementation_runs`
+- Auto-save the current task library to browser `localStorage`
+- Export the current task library as `tasks.json`
 
-AI Task Flow 关注的是 AI 开发过程里的上下文流转：
+## Why Not A Normal Task Manager
+
+AI Task Flow focuses on context handoff in AI-assisted development:
 
 ```text
-模糊想法 -> AI 结构化任务 -> 入库追踪 -> 生成开发 Prompt -> AI 执行 -> 结构化结果回填
+Rough idea -> AI-structured task -> Task library -> Development prompt -> AI execution -> Structured result backfill
 ```
 
-它适合把产品想法、Bug、设计调整和技术债整理成可执行、可验证、可回填的任务单元，让人和 AI Agent 围绕同一份结构化数据协作。
+It helps turn product ideas, bugs, design changes, and technical debt into executable, verifiable, and backfillable task units, so humans and AI agents can collaborate around the same structured data.
 
-## 本地运行
+## Local Run
 
-浏览器直接打开 HTML 时，通常会因为 CORS 限制无法读取同目录的 `tasks.json`。建议使用本地 HTTP 服务：
+Opening the HTML file directly may prevent the browser from reading `tasks.json` because of CORS restrictions. Use a local HTTP server instead:
 
 ```bash
 python3 -m http.server 8000
 ```
 
-然后访问：
+Then open:
 
 ```text
 http://localhost:8000/
 ```
 
-## 文件结构
+## Project Structure
 
 ```text
 .
-├── index.html                  # 单文件前端应用
-├── tasks.json                  # 通用示例任务数据
+├── index.html                  # Single-file frontend app
+├── tasks.json                  # Generic demo task data
 ├── examples/
-│   └── golfscore-tasks.json    # GolfScore 项目示例数据
+│   └── golfscore-tasks.json    # Example task library from a real project
 └── README.md
 ```
 
-## 数据说明
+## Data Model
 
-`tasks.json` 包含项目上下文、共享组件信息和任务列表。页面运行时会把当前任务库自动保存到浏览器 `localStorage`，所以新增任务、状态变更和执行结果回填在刷新、关闭浏览器或关机后仍会保留。
+`tasks.json` contains project context, shared component notes, and task records. During use, the current task library is automatically saved to browser `localStorage`, so new tasks, status changes, and execution backfills survive refreshes, browser restarts, and machine restarts.
 
-需要把本地结果同步回 Git 仓库时，请使用页面里的导出功能生成新的 `tasks.json`，再用它覆盖项目文件并提交。
+To sync local results back to Git, export a new `tasks.json`, replace the project file with it, and commit the change.
 
-根目录的 `tasks.json` 是通用演示数据，不依赖任何私有项目。`examples/golfscore-tasks.json` 是一个真实项目的示例任务库，里面会提到 GolfScore / GolfHub、SwiftUI 和设计 Token，但这些只是示例任务内容，不是 AI Task Flow 的运行依赖。
+The root `tasks.json` is generic demo data and does not depend on any private project. `examples/golfscore-tasks.json` is a real-project example that mentions GolfScore / GolfHub, SwiftUI, and design tokens. Those are example task contents, not runtime dependencies of AI Task Flow.
 
-AI Task Flow 本身是一个静态 HTML 应用，CSS 变量已经内置在 `index.html` 中，不需要外部设计系统、Swift Token 文件或构建步骤。
+AI Task Flow is a static HTML app. Its CSS variables are built into `index.html`; it does not require an external design system, Swift token files, or a build step.
 
 ## License
 
