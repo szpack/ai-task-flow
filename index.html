@@ -205,13 +205,13 @@
   }
   .workflow-step {
     position: relative;
-    flex: 1 0 210px;
+    flex: 1 1 0;
     background: rgba(245, 224, 143, 0.12);
     border: 1px solid rgba(245, 224, 143, 0.18);
     border-right: 0;
-    padding: 11px 30px 11px 18px;
+    padding: 10px 24px 10px 14px;
     color: var(--cream-secondary);
-    min-width: 210px;
+    min-width: 0;
     clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 50%, calc(100% - 22px) 100%, 0 100%, 22px 50%);
   }
   .workflow-step:first-child {
@@ -229,15 +229,15 @@
   .workflow-step-title {
     display: flex;
     align-items: center;
-    gap: 7px;
+    gap: 6px;
     color: var(--cream-text);
     font-size: 12px;
     font-weight: 600;
     margin-bottom: 4px;
   }
   .workflow-step-num {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     border-radius: 999px;
     display: inline-flex;
     align-items: center;
@@ -250,16 +250,16 @@
     flex-shrink: 0;
   }
   .workflow-step-copy {
-    font-size: 11px;
-    line-height: 1.35;
-    margin-bottom: 7px;
+    font-size: 10px;
+    line-height: 1.3;
+    margin-bottom: 6px;
   }
   .workflow-link {
     border: 0;
     background: transparent;
     color: var(--accent-bright);
     font-family: inherit;
-    font-size: 12px;
+    font-size: 11px;
     cursor: pointer;
     padding: 0;
   }
