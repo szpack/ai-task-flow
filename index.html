@@ -169,6 +169,83 @@
   .progress-skipped { background: var(--skipped); }
   .progress-bar > div { height: 100%; transition: width 0.3s; }
 
+  /* Workflow */
+  .workflow {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin: 18px 0;
+  }
+  .workflow-step {
+    background: var(--masters-card);
+    border: 1px solid rgba(245, 224, 143, 0.14);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: var(--cream-secondary);
+    min-width: 0;
+  }
+  .workflow-step-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--cream-text);
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .workflow-step-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-bright);
+    color: var(--augusta-green-deep);
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .workflow-step-copy {
+    font-size: 12px;
+    line-height: 1.45;
+    margin-bottom: 8px;
+  }
+  .workflow-link {
+    border: 0;
+    background: transparent;
+    color: var(--accent-bright);
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 0;
+  }
+  .workflow-link:hover {
+    color: var(--cream-text);
+  }
+
+  .section-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 22px 0 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--masters-line);
+    scroll-margin-top: 82px;
+  }
+  .section-title {
+    font-size: 15px;
+    color: var(--cream-text);
+    font-weight: 600;
+  }
+  .section-copy {
+    color: var(--cream-tertiary);
+    font-size: 12px;
+    text-align: right;
+  }
+
   /* Current task pin */
   .current-pin {
     background: var(--masters-card-live);
@@ -802,6 +879,9 @@
   }
 
   @media (max-width: 1000px) {
+    .workflow {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
     .manager,
     .new-task-grid {
       grid-template-columns: 1fr;
@@ -826,6 +906,16 @@
       grid-template-columns: repeat(5, minmax(54px, 1fr));
       overflow-x: auto;
       padding-bottom: 2px;
+    }
+    .workflow {
+      grid-template-columns: 1fr;
+    }
+    .section-heading {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+    .section-copy {
+      text-align: left;
     }
     .stat {
       min-width: 54px;
@@ -888,17 +978,32 @@
     </div>
   </div>
 
-  <div class="manager">
-    <section class="manager-panel">
-      <div class="manager-title" data-i18n="runBackfillTitle">Execution Backfill</div>
-      <div class="manager-copy" data-i18n="runBackfillCopy">Paste structured output from Codex or Claude and write it into implementation_runs.</div>
-      <textarea class="manager-field" id="run-json" placeholder='{"task_id":"PROMPT_001","status":"done","commit":"...","summary":"..."}'></textarea>
-      <div class="manager-actions">
-        <button class="action-btn primary" id="btn-apply-run" data-i18n="applyRun">Apply result</button>
-        <button class="action-btn" id="btn-run-template" data-i18n="copyRunTemplate">Copy result template</button>
-      </div>
-      <textarea class="manager-field manager-output short" id="run-result" readonly data-i18n-placeholder="runResultPlaceholder" placeholder="Backfill result"></textarea>
+  <div class="workflow" id="workflow">
+    <section class="workflow-step">
+      <div class="workflow-step-title"><span class="workflow-step-num">1</span><span data-i18n="workflowCollectTitle">Capture</span></div>
+      <div class="workflow-step-copy" data-i18n="workflowCollectCopy">Create a task from a rough idea.</div>
+      <button class="workflow-link" data-workflow-action="new" data-i18n="workflowCollectAction">New Task</button>
     </section>
+    <section class="workflow-step">
+      <div class="workflow-step-title"><span class="workflow-step-num">2</span><span data-i18n="workflowChooseTitle">Choose</span></div>
+      <div class="workflow-step-copy" data-i18n="workflowChooseCopy">Select one or more tasks for AI.</div>
+      <button class="workflow-link" data-workflow-action="tasks" data-i18n="workflowChooseAction">Go to task library</button>
+    </section>
+    <section class="workflow-step">
+      <div class="workflow-step-title"><span class="workflow-step-num">3</span><span data-i18n="workflowPromptTitle">Prompt</span></div>
+      <div class="workflow-step-copy" data-i18n="workflowPromptCopy">Generate a focused coding prompt.</div>
+      <button class="workflow-link" data-workflow-action="prompt" data-i18n="workflowPromptAction">Generate prompt</button>
+    </section>
+    <section class="workflow-step">
+      <div class="workflow-step-title"><span class="workflow-step-num">4</span><span data-i18n="workflowBackfillTitle">Backfill</span></div>
+      <div class="workflow-step-copy" data-i18n="workflowBackfillCopy">Paste AI results back into the task.</div>
+      <button class="workflow-link" data-workflow-action="backfill" data-i18n="workflowBackfillAction">Backfill result</button>
+    </section>
+  </div>
+
+  <div class="section-heading" id="task-library-section">
+    <div class="section-title" data-i18n="taskLibraryTitle">Task Library</div>
+    <div class="section-copy" data-i18n="taskLibraryCopy">Filter, inspect, select, or pin tasks.</div>
   </div>
 
   <div class="filters">
@@ -921,22 +1026,45 @@
 
   <div class="actions-row">
     <button class="action-btn primary" id="btn-export" data-i18n="exportJson">Export task library JSON</button>
-    <button class="action-btn" id="btn-generate-dev-prompt" data-i18n="generateDevPrompt">Generate development prompt</button>
     <button class="action-btn" id="btn-reset-all" data-i18n="resetAll">Clear all status</button>
     <button class="action-btn" id="btn-collapse-all" data-i18n="collapseAll">Collapse all</button>
+  </div>
+
+  <div id="task-list"></div>
+
+  <div class="section-heading" id="prompt-section">
+    <div class="section-title" data-i18n="promptSectionTitle">AI Prompt Handoff</div>
+    <div class="section-copy" data-i18n="promptSectionCopy">Use selected tasks to create a coding prompt.</div>
   </div>
 
   <div class="selection-bar">
     <span class="selection-count" id="selection-count">0 tasks selected</span>
     <button class="action-btn" id="btn-select-visible" data-i18n="selectVisible">Select filtered tasks</button>
     <button class="action-btn" id="btn-clear-selection" data-i18n="clearSelection">Clear selection</button>
+    <button class="action-btn primary" id="btn-generate-dev-prompt" data-i18n="generateDevPrompt">Generate development prompt</button>
   </div>
   <div class="field-shell">
     <textarea class="manager-field manager-output" id="dev-prompt-output" data-i18n-placeholder="devPromptPlaceholder" placeholder="Select tasks and generate a Codex / Claude development prompt here"></textarea>
     <button class="field-copy-btn" data-copy-target="dev-prompt-output" data-i18n-title="copy" data-i18n-aria="copyDevPrompt" title="Copy" aria-label="Copy development prompt">⧉</button>
   </div>
 
-  <div id="task-list"></div>
+  <div class="section-heading" id="backfill-section">
+    <div class="section-title" data-i18n="backfillSectionTitle">Execution Backfill</div>
+    <div class="section-copy" data-i18n="backfillSectionCopy">Store the AI result with the task record.</div>
+  </div>
+
+  <div class="manager">
+    <section class="manager-panel">
+      <div class="manager-title" data-i18n="runBackfillTitle">Execution Backfill</div>
+      <div class="manager-copy" data-i18n="runBackfillCopy">Paste structured output from Codex or Claude and write it into implementation_runs.</div>
+      <textarea class="manager-field" id="run-json" placeholder='{"task_id":"PROMPT_001","status":"done","commit":"...","summary":"..."}'></textarea>
+      <div class="manager-actions">
+        <button class="action-btn primary" id="btn-apply-run" data-i18n="applyRun">Apply result</button>
+        <button class="action-btn" id="btn-run-template" data-i18n="copyRunTemplate">Copy result template</button>
+      </div>
+      <textarea class="manager-field manager-output short" id="run-result" readonly data-i18n-placeholder="runResultPlaceholder" placeholder="Backfill result"></textarea>
+    </section>
+  </div>
 
 </div>
 
@@ -1057,6 +1185,24 @@ const I18N = {
     importCurrentList: '导入到当前列表',
     validateJson: '校验 JSON',
     importResultPlaceholder: '导入/校验结果',
+    workflowCollectTitle: '收集',
+    workflowCollectCopy: '把模糊想法变成任务。',
+    workflowCollectAction: '新建任务',
+    workflowChooseTitle: '选择',
+    workflowChooseCopy: '勾选要交给 AI 的任务。',
+    workflowChooseAction: '查看任务库',
+    workflowPromptTitle: '生成 Prompt',
+    workflowPromptCopy: '把选中任务整理成开发提示词。',
+    workflowPromptAction: '生成提示词',
+    workflowBackfillTitle: '回填',
+    workflowBackfillCopy: '把 AI 执行结果存回任务。',
+    workflowBackfillAction: '回填结果',
+    taskLibraryTitle: '任务库',
+    taskLibraryCopy: '筛选、查看、选择或钉选任务。',
+    promptSectionTitle: 'AI Prompt 交接',
+    promptSectionCopy: '用选中任务生成开发提示词。',
+    backfillSectionTitle: '执行结果回填',
+    backfillSectionCopy: '把 AI 结果保存到任务记录。',
     footerText: '任务库自动保存到 localStorage · 导出 tasks.json 后可提交到 Git · 示例数据见',
     selectedCount: count => `已选 ${count} 个任务`,
     currentTask: '当前任务',
@@ -1182,6 +1328,24 @@ const I18N = {
     importCurrentList: 'Import into current list',
     validateJson: 'Validate JSON',
     importResultPlaceholder: 'Import / validation result',
+    workflowCollectTitle: 'Capture',
+    workflowCollectCopy: 'Create a task from a rough idea.',
+    workflowCollectAction: 'New Task',
+    workflowChooseTitle: 'Choose',
+    workflowChooseCopy: 'Select one or more tasks for AI.',
+    workflowChooseAction: 'Go to task library',
+    workflowPromptTitle: 'Prompt',
+    workflowPromptCopy: 'Generate a focused coding prompt.',
+    workflowPromptAction: 'Generate prompt',
+    workflowBackfillTitle: 'Backfill',
+    workflowBackfillCopy: 'Paste AI results back into the task.',
+    workflowBackfillAction: 'Backfill result',
+    taskLibraryTitle: 'Task Library',
+    taskLibraryCopy: 'Filter, inspect, select, or pin tasks.',
+    promptSectionTitle: 'AI Prompt Handoff',
+    promptSectionCopy: 'Use selected tasks to create a coding prompt.',
+    backfillSectionTitle: 'Execution Backfill',
+    backfillSectionCopy: 'Store the AI result with the task record.',
     footerText: 'Task library is auto-saved to localStorage · Export tasks.json to commit it to Git · Examples in',
     selectedCount: count => `${count} task${count === 1 ? '' : 's'} selected`,
     currentTask: 'Current task',
@@ -2118,6 +2282,11 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2000);
 }
 
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 // ============================================================
 // Filter handlers
 // ============================================================
@@ -2140,6 +2309,20 @@ document.getElementById('search').addEventListener('input', e => {
 
 document.querySelectorAll('[data-lang]').forEach(btn => {
   btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+});
+document.querySelectorAll('[data-workflow-action]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const action = btn.dataset.workflowAction;
+    if (action === 'new') {
+      openNewTaskModal();
+    } else if (action === 'tasks') {
+      scrollToSection('task-library-section');
+    } else if (action === 'prompt') {
+      scrollToSection('prompt-section');
+    } else if (action === 'backfill') {
+      scrollToSection('backfill-section');
+    }
+  });
 });
 document.getElementById('btn-new-task').addEventListener('click', openNewTaskModal);
 document.getElementById('btn-close-new-task').addEventListener('click', closeNewTaskModal);
