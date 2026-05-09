@@ -117,7 +117,7 @@
   /* Stats bar */
   .stats {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(220px, 1.35fr) minmax(0, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr)) 44px minmax(0, 1fr);
     gap: 8px;
     margin-bottom: 0;
   }
@@ -402,8 +402,9 @@
   .chip.p2.active { background: var(--p2); color: var(--paper); }
 
   .search-bar {
-    width: 100%;
+    width: 44px;
     min-width: 0;
+    height: 100%;
     padding: 8px 12px 8px 34px;
     border: 1px solid var(--line);
     border-radius: 6px;
@@ -411,11 +412,14 @@
     color: var(--ink);
     font-family: inherit;
     font-size: 13px;
+    cursor: pointer;
+    transition: width 0.18s, border-color 0.18s, box-shadow 0.18s;
   }
   .search-field {
     position: relative;
     display: flex;
     align-items: center;
+    min-width: 44px;
   }
   .search-icon {
     position: absolute;
@@ -423,11 +427,18 @@
     color: var(--ink-faint);
     font-size: 13px;
     pointer-events: none;
+    z-index: 3;
   }
-  .search-bar:focus {
+  .search-bar:focus,
+  .search-bar:not(:placeholder-shown) {
     outline: none;
     border-color: var(--accent);
     box-shadow: 0 0 0 2px rgba(212, 180, 106, 0.18);
+    cursor: text;
+    position: absolute;
+    left: 0;
+    z-index: 2;
+    width: 240px;
   }
 
   .actions-row {
@@ -970,7 +981,7 @@
       max-width: calc(100vw - 170px);
     }
     .stats {
-      grid-template-columns: repeat(4, minmax(54px, 1fr)) minmax(180px, 1.6fr) minmax(64px, 1fr);
+      grid-template-columns: repeat(4, minmax(54px, 1fr)) 44px minmax(64px, 1fr);
       overflow-x: auto;
       padding-bottom: 2px;
     }
@@ -1065,7 +1076,7 @@
       <div class="stat skipped"><div class="stat-num" id="stat-skipped">0</div><div class="stat-label" data-i18n="statSkipped">Skipped</div></div>
       <div class="search-field">
         <span class="search-icon" aria-hidden="true">🔍</span>
-        <input type="text" class="search-bar" id="search" data-i18n-placeholder="searchPlaceholder" placeholder="Search task ID, title, or description...">
+        <input type="text" class="search-bar" id="search" placeholder=" ">
       </div>
       <div class="stat p0"><div class="stat-num" id="stat-p0">0</div><div class="stat-label" data-i18n="statP0Open">P0 Open</div></div>
     </div>
