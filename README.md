@@ -12,6 +12,7 @@ AI Task Flow is a lightweight, local-first workflow tool for AI-assisted develop
 - 将自然语言需求转换为结构化任务 JSON 提示词
 - 为选中的任务生成 Codex / Claude 开发提示词
 - 回填执行结果到 `implementation_runs`
+- 自动把当前任务库保存到浏览器 `localStorage`
 - 导出合并当前状态后的 `tasks.json`
 
 ## 为什么不是普通任务管理器
@@ -51,7 +52,9 @@ http://localhost:8000/
 
 ## 数据说明
 
-`tasks.json` 包含项目上下文、共享组件信息和任务列表。页面运行时会把用户操作状态保存到浏览器 `localStorage`，需要持久化时请使用页面里的导出功能生成新的 `tasks.json`。
+`tasks.json` 包含项目上下文、共享组件信息和任务列表。页面运行时会把当前任务库自动保存到浏览器 `localStorage`，所以新增任务、状态变更和执行结果回填在刷新、关闭浏览器或关机后仍会保留。
+
+需要把本地结果同步回 Git 仓库时，请使用页面里的导出功能生成新的 `tasks.json`，再用它覆盖项目文件并提交。
 
 根目录的 `tasks.json` 是通用演示数据，不依赖任何私有项目。`examples/golfscore-tasks.json` 是一个真实项目的示例任务库，里面会提到 GolfScore / GolfHub、SwiftUI 和设计 Token，但这些只是示例任务内容，不是 AI Task Flow 的运行依赖。
 
