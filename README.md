@@ -42,14 +42,20 @@ http://localhost:8000/
 
 ```text
 .
-├── index.html  # 单文件前端应用
-├── tasks.json  # 结构化任务数据
+├── index.html                  # 单文件前端应用
+├── tasks.json                  # 通用示例任务数据
+├── examples/
+│   └── golfscore-tasks.json    # GolfScore 项目示例数据
 └── README.md
 ```
 
 ## 数据说明
 
 `tasks.json` 包含项目上下文、共享组件信息和任务列表。页面运行时会把用户操作状态保存到浏览器 `localStorage`，需要持久化时请使用页面里的导出功能生成新的 `tasks.json`。
+
+根目录的 `tasks.json` 是通用演示数据，不依赖任何私有项目。`examples/golfscore-tasks.json` 是一个真实项目的示例任务库，里面会提到 GolfScore / GolfHub、SwiftUI 和设计 Token，但这些只是示例任务内容，不是 AI Task Flow 的运行依赖。
+
+AI Task Flow 本身是一个静态 HTML 应用，CSS 变量已经内置在 `index.html` 中，不需要外部设计系统、Swift Token 文件或构建步骤。
 
 ## License
 

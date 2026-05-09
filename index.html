@@ -834,7 +834,7 @@
     <section class="manager-panel">
       <div class="manager-title">执行结果回填</div>
       <div class="manager-copy">粘贴 Codex / Claude 输出的结构化结果,写入 implementation_runs。</div>
-      <textarea class="manager-field" id="run-json" placeholder='{"task_id":"SBS_009","status":"done","commit":"...","summary":"..."}'></textarea>
+      <textarea class="manager-field" id="run-json" placeholder='{"task_id":"PROMPT_001","status":"done","commit":"...","summary":"..."}'></textarea>
       <div class="manager-actions">
         <button class="action-btn primary" id="btn-apply-run">回填执行结果</button>
         <button class="action-btn" id="btn-run-template">复制结果模板</button>
@@ -899,12 +899,11 @@
         <div class="manager-copy">写入口水话需求,生成给 AI 的结构化任务 JSON 提示词。</div>
         <div class="manager-select-row">
           <select class="manager-select" id="intake-category">
-            <option value="MATCH_LIST">球局列表</option>
-            <option value="MULTI_SCORE">多人记分</option>
-            <option value="SCORECARD">计分卡详情</option>
-            <option value="SBS">逐杆记录</option>
-            <option value="MAP">卫星地图</option>
-            <option value="GLOBAL">全局体验</option>
+            <option value="IDEA">Idea Intake</option>
+            <option value="TASK">Structured Tasks</option>
+            <option value="PROMPT">AI Prompts</option>
+            <option value="RUN">Execution Backfill</option>
+            <option value="GLOBAL">Global Experience</option>
           </select>
           <select class="manager-select" id="intake-type">
             <option value="bug">bug</option>
@@ -941,7 +940,7 @@
 <div class="toast" id="toast"></div>
 
 <footer>
-  状态存于 localStorage · 修改 tasks.json 后刷新页面同步 · 配套 <code>DESIGN_TOKENS_GUIDE.md</code>
+  状态存于 localStorage · 修改 tasks.json 后刷新页面同步 · 示例数据见 <code>examples/</code>
 </footer>
 
 <script>
@@ -985,6 +984,7 @@ async function loadTasks() {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('content').style.display = 'block';
     loadState();
+    renderIntakeCategories();
     render();
   } catch (e) {
     document.getElementById('loading').innerHTML = `
@@ -993,7 +993,7 @@ async function loadTasks() {
         本页面需要从同目录加载 <code>tasks.json</code>。<br>
         如果直接双击打开 HTML(<code>file://</code>),浏览器会因 CORS 拒绝读取。<br><br>
         <strong>解决方法</strong>:在该文件目录下跑一个本地 HTTP 服务,然后访问 <code>http://localhost:8000/</code>:<br><br>
-        <code>cd .codex && python3 -m http.server 8000</code><br><br>
+        <code>python3 -m http.server 8000</code><br><br>
         或者直接把 tasks.json 内容粘到下方的"手动加载"区:<br>
         <textarea id="manual-json" rows="6" style="width: 100%; margin-top: 10px; font-family: 'SF Mono', monospace; font-size: 11px;" placeholder='粘贴 tasks.json 内容...'></textarea>
         <button id="btn-manual" style="margin-top: 8px; padding: 6px 14px; background: var(--ink); color: var(--bg-alt); border: none; border-radius: 4px; cursor: pointer;">加载</button>
@@ -1006,6 +1006,7 @@ async function loadTasks() {
         document.getElementById('loading').style.display = 'none';
         document.getElementById('content').style.display = 'block';
         loadState();
+        renderIntakeCategories();
         render();
       } catch (err) {
         alert('JSON 格式错误: ' + err.message);
@@ -1026,37 +1027,74 @@ function getTask(taskId) {
   return getTasks().find(t => t.id === taskId);
 }
 
+const DEFAULT_TASK_CATEGORIES = [
+  { prefix: 'IDEA', label: 'Idea Intake' },
+  { prefix: 'TASK', label: 'Structured Tasks' },
+  { prefix: 'PROMPT', label: 'AI Prompts' },
+  { prefix: 'RUN', label: 'Execution Backfill' },
+  { prefix: 'GLOBAL', label: 'Global Experience' }
+];
+
+const LEGACY_TASK_CATEGORIES = [
+  { prefix: 'MATCH_LIST', label: '球局列表页' },
+  { prefix: 'MULTI_SCORE', label: '多人记分页' },
+  { prefix: 'SCORECARD', label: '计分卡详情页' },
+  { prefix: 'SBS', label: '逐杆记录(SBS)' },
+  { prefix: 'MAP', label: '卫星地图' }
+];
+
+function getProjectContext() {
+  return (tasksData && tasksData.project_context) || {};
+}
+
+function getTaskCategories() {
+  const categories = getProjectContext().task_categories;
+  if (Array.isArray(categories) && categories.length) {
+    return categories
+      .filter(c => c && c.prefix)
+      .map(c => ({ prefix: String(c.prefix), label: c.label || c.prefix }));
+  }
+  return DEFAULT_TASK_CATEGORIES;
+}
+
+function getAllKnownCategories() {
+  const seen = new Set();
+  return [...getTaskCategories(), ...DEFAULT_TASK_CATEGORIES, ...LEGACY_TASK_CATEGORIES]
+    .filter(c => {
+      if (seen.has(c.prefix)) return false;
+      seen.add(c.prefix);
+      return true;
+    });
+}
+
 function categoryFromId(id) {
-  if (id.startsWith('MATCH_LIST')) return '球局列表页';
-  if (id.startsWith('MULTI_SCORE')) return '多人记分页';
-  if (id.startsWith('SCORECARD')) return '计分卡详情页';
-  if (id.startsWith('SBS')) return '逐杆记录(SBS)';
-  if (id.startsWith('MAP')) return '卫星地图';
-  if (id.startsWith('GLOBAL')) return '视觉与全局体验';
+  const match = getAllKnownCategories()
+    .sort((a, b) => b.prefix.length - a.prefix.length)
+    .find(c => id === c.prefix || id.startsWith(c.prefix + '_'));
+  if (match) return match.label;
+  const inferred = String(id || '').split('_').slice(0, -1).join('_');
+  if (inferred) return inferred;
   return '其他';
 }
 
 function prefixFromCategory(category) {
-  const map = {
-    MATCH_LIST: 'MATCH_LIST',
-    MULTI_SCORE: 'MULTI_SCORE',
-    SCORECARD: 'SCORECARD',
-    SBS: 'SBS',
-    MAP: 'MAP',
-    GLOBAL: 'GLOBAL'
-  };
-  return map[category] || 'GLOBAL';
+  const match = getAllKnownCategories().find(c => c.prefix === category || c.label === category);
+  return match ? match.prefix : 'TASK';
 }
 
-const CATEGORY_ORDER = [
-  '球局列表页',
-  '多人记分页',
-  '计分卡详情页',
-  '逐杆记录(SBS)',
-  '卫星地图',
-  '视觉与全局体验',
-  '其他'
-];
+function getCategoryOrder() {
+  return [...getTaskCategories(), ...LEGACY_TASK_CATEGORIES]
+    .map(c => c.label)
+    .concat('其他');
+}
+
+function renderIntakeCategories() {
+  const select = document.getElementById('intake-category');
+  if (!select) return;
+  select.innerHTML = getTaskCategories()
+    .map(c => `<option value="${escapeHTML(c.prefix)}">${escapeHTML(c.label)}</option>`)
+    .join('');
+}
 
 // ============================================================
 // Status helpers
@@ -1176,7 +1214,9 @@ function renderTasks() {
   });
 
   list.innerHTML = '';
-  CATEGORY_ORDER.forEach(cat => {
+  const categoryOrder = getCategoryOrder();
+  const categories = categoryOrder.concat(Object.keys(grouped).filter(cat => !categoryOrder.includes(cat)).sort());
+  categories.forEach(cat => {
     const items = (grouped[cat] || []).filter(matchesFilter);
     if (items.length === 0) return;
 
@@ -1434,6 +1474,29 @@ function runSummaryHTML(run) {
   `;
 }
 
+function formatObjectAsLines(value) {
+  if (!value || typeof value !== 'object') return '- Not specified';
+  return Object.entries(value)
+    .map(([key, item]) => `- ${key}: ${Array.isArray(item) ? item.join(', ') : item}`)
+    .join('\n') || '- Not specified';
+}
+
+function projectContextPromptBlock() {
+  const context = getProjectContext();
+  const conventions = context.conventions || {};
+  return [
+    `- Project: ${context.name || 'Current project'}`,
+    context.description ? `- Description: ${context.description}` : '',
+    context.platform ? `- Platform: ${context.platform}` : '',
+    '- Tech stack:',
+    formatObjectAsLines(context.tech_stack),
+    context.execution_mode ? `- Execution mode: ${context.execution_mode}` : '',
+    context.test_strategy ? `- Test strategy: ${context.test_strategy}` : '',
+    Object.keys(conventions).length ? '- Conventions:' : '',
+    Object.keys(conventions).length ? formatObjectAsLines(conventions) : ''
+  ].filter(Boolean).join('\n');
+}
+
 function buildStructurePrompt() {
   const raw = document.getElementById('intake-text').value.trim();
   const category = document.getElementById('intake-category').value;
@@ -1443,11 +1506,10 @@ function buildStructurePrompt() {
     return '';
   }
   const prefix = prefixFromCategory(category);
-  return `你是 GolfHub Score 项目的产品/工程任务分析助手。请把下面的自然语言需求转成一个可导入 .codex/tasks.json 的结构化 task JSON。
+  return `你是 ${getProjectContext().name || '当前项目'} 的产品/工程任务分析助手。请把下面的自然语言需求转成一个可导入 AI Task Flow tasks.json 的结构化 task JSON。
 
 项目背景:
-- iOS App: SwiftUI + SwiftData + ARKit/Metal
-- 架构原则: UI 由状态驱动,业务逻辑不要写在 View 里,服务可注入可测试
+${projectContextPromptBlock()}
 - 任务 ID 前缀建议: ${prefix}
 - 类型建议: ${type}
 
@@ -1521,10 +1583,13 @@ function buildDevPrompt(tasks) {
     showToast('先选择至少 1 个任务');
     return '';
   }
-  return `你现在在 GolfHub Score 仓库中执行以下任务。请先阅读相关代码并做简短自检:
+  return `你现在在 ${getProjectContext().name || '当前项目'} 仓库中执行以下任务。请先阅读相关代码并做简短自检:
 1. Impact analysis: 会触碰哪些模块,是否引入新耦合
-2. Architecture consistency: 是否符合 UI 由 State 驱动、业务逻辑不写进 View、服务可注入可测试
+2. Architecture consistency: 是否符合当前项目架构和既有约定
 3. Testability: 如何验证,是否需要补 debug 信息
+
+项目背景:
+${projectContextPromptBlock()}
 
 执行要求:
 - 只实现下列任务,不要顺手重构无关代码
@@ -1764,7 +1829,7 @@ document.getElementById('btn-export').addEventListener('click', () => {
   a.download = 'tasks.json';
   a.click();
   URL.revokeObjectURL(url);
-  showToast('已下载 tasks.json,覆盖到 .codex/tasks.json 即可同步');
+  showToast('已下载 tasks.json,覆盖项目中的 tasks.json 即可同步');
 });
 
 document.getElementById('btn-reset-all').addEventListener('click', () => {

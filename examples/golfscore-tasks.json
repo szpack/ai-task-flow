@@ -1,0 +1,1094 @@
+{
+  "schema_version": "1.0",
+  "project_context": {
+    "name": "GolfScore",
+    "platform": "iOS",
+    "tech_stack": {
+      "language": "Swift",
+      "ui": "SwiftUI",
+      "data": "SwiftData",
+      "ar": "ARKit + Metal",
+      "min_ios": "16.0"
+    },
+    "execution_mode": "single_task_sequential",
+    "test_strategy": "unit_and_xcuitest",
+    "tracking_system": "github_issues_and_pr",
+    "design_tokens": {
+      "_note": "Codex 应在首次任务时通过 grep 定位以下 Token 文件,记录到 .codex/locations.json 后续复用",
+      "expected_files": [
+        "DesignTokens.swift",
+        "Colors.swift",
+        "Typography.swift",
+        "Spacing.swift",
+        "Theme.swift"
+      ],
+      "search_strategy": "grep -r 'extension Color' && grep -r 'extension Font' && grep -r 'enum Spacing'"
+    },
+    "conventions": {
+      "branch_pattern": "{type}/{TASK_ID}-{kebab-summary}",
+      "commit_message_pattern": "{type}({scope}): {subject} (#{issue_number})",
+      "commit_types": ["fix", "feat", "refactor", "style", "perf", "test", "docs"],
+      "pr_title_pattern": "[{TASK_ID}] {title}",
+      "pr_body_template_path": ".github/PULL_REQUEST_TEMPLATE.md"
+    }
+  },
+
+  "shared_components": {
+    "yellow_state_logic": {
+      "description": "提交后延迟 ~500ms 检测 client-server 一致性,一致则不变黄;不一致或超时才置黄",
+      "used_by": ["MULTI_SCORE_003", "MULTI_SCORE_004", "SCORECARD_001"],
+      "location_hint": "应抽取为独立 ViewModel 或 Observable 类,搜索 grep -r 'yellow' && grep -r 'pendingSync'",
+      "config": {
+        "delay_ms": 500,
+        "delay_ms_min": 300,
+        "delay_ms_max": 800,
+        "should_be_in_config_file": true
+      }
+    },
+    "yardage_input_modal": {
+      "description": "码数输入弹框组件,居中偏下,标题+输入+确认/取消",
+      "used_by": ["SBS_007", "SBS_009"],
+      "requirements": [
+        "背景半透明遮罩 (alpha 0.4-0.6)",
+        "弹框本体完全不透明",
+        "确认按钮触面 >= 44pt",
+        "出现/消失动画 <= 200ms",
+        "60fps 顺滑无掉帧"
+      ]
+    },
+    "tee_button_group": {
+      "description": "Tee 选择按钮组,圆点+码数,颜色由 Tee 名映射",
+      "used_by": ["SBS_001", "SBS_003"],
+      "tee_color_map": {
+        "black": "near_black",
+        "blue": "brand_blue",
+        "white": "neutral_white",
+        "red": "accent_red",
+        "gold": "accent_gold"
+      }
+    }
+  },
+
+  "tasks": [
+    {
+      "id": "MATCH_LIST_001",
+      "title": "进行中球局的 to par 颜色统一",
+      "type": "design",
+      "priority": "P2",
+      "status": "open",
+      "depends_on": [],
+      "blocks": [],
+      "scope": {
+        "allowed_paths_hint": ["球局列表 / RoundList / MatchList 相关 View"],
+        "forbidden_paths_hint": ["计分卡详情页 (颜色逻辑独立保留)"]
+      },
+      "anchors": {
+        "primary_files": [],
+        "primary_symbols": [],
+        "search_hints": ["toPar", "RoundCard", "MatchCard", "RoundListView", "InProgress"]
+      },
+      "problem": "球局列表「进行中」卡片的 to par 分数因成绩好坏使用红/绿/灰等不同颜色,造成列表层级噪音",
+      "expected": "to par 分数统一使用单一中性色,不再用颜色表达成绩好坏",
+      "constraints": [
+        "颜色必须取自设计 Token,禁止硬编码",
+        "不影响计分卡详情页的 to par 着色规则",
+        "深浅色模式下都符合规范"
+      ],
+      "acceptance": {
+        "unit_tests": [
+          {
+            "name": "testInProgressRoundCardToParColorIsConstant",
+            "assertion": "对 to par = -2 / 0 / +5 三种值,RoundCard 的 toParColor 返回值完全相同"
+          }
+        ],
+        "ui_tests": [
+          {
+            "name": "testRoundListInProgressToParVisualConsistency",
+            "assertion": "在球局列表 In-Progress 区域,所有 toPar Label 的 textColor 一致"
+          }
+        ],
+        "manual_checks": [
+          "构造 to par 为 -2/0/+5 的三条进行中球局,目视确认颜色一致",
+          "切换深浅色模式各验证一次"
+        ]
+      },
+      "done_definition": [
+        "所有 unit_tests 和 ui_tests 通过",
+        "swift build 无新增 warning",
+        "PR 描述附改前/改后截图对比"
+      ],
+      "tracking": {
+        "branch": "style/MATCH_LIST_001-topar-color-unify",
+        "commit_prefix": "style(match-list)",
+        "pr_title": "[MATCH_LIST_001] 进行中球局 to par 颜色统一"
+      }
+    },
+
+    {
+      "id": "MATCH_LIST_002",
+      "title": "进行中球局的 PK 得分实时显示 (0 秒级)",
+      "type": "bug",
+      "priority": "P0",
+      "status": "open",
+      "depends_on": [],
+      "blocks": [],
+      "scope": {
+        "allowed_paths_hint": ["球局列表 View / ViewModel", "PK 得分计算/缓存层"],
+        "forbidden_paths_hint": ["多人记分页内部逻辑 (除非数据源共享)"]
+      },
+      "anchors": {
+        "primary_files": [],
+        "primary_symbols": [],
+        "search_hints": ["pkScore", "PKRule", "拉斯", "RoundListViewModel", "InProgressRound"]
+      },
+      "problem": "为进行中球局添加 PK 规则后,返回球局列表「进行中」分组看不到 PK 得分;即使能显示也有延迟。已有报告: rnd_20260508_tmrnbl",
+      "expected": "列表打开即可见正确的 PK 得分,首屏即拿到本地缓存值,异步对齐服务器,目标 0 秒级",
+      "constraints": [
+        "本地缓存与服务器数据冲突时以服务器为准,静默更新",
+        "无 PK 规则的球局不显示 PK 得分位,不留空槽",
+        "禁止首屏阻塞等待网络"
+      ],
+      "acceptance": {
+        "unit_tests": [
+          {
+            "name": "testRoundListLoadsPKScoreFromCacheSynchronously",
+            "assertion": "ViewModel 初始化后立即可读取 pkScore (来自本地缓存),无 async/await"
+          },
+          {
+            "name": "testServerScoreOverridesCacheWhenDiffers",
+            "assertion": "服务器返回与缓存不同的 pkScore 时,UI 模型更新为服务器值"
+          }
+        ],
+        "ui_tests": [
+          {
+            "name": "testInProgressPKScoreVisibleOnListOpen",
+            "assertion": "进入球局列表后第一帧,带 PK 规则的 In-Progress 卡片显示具体数字 (非空字符串/loading)"
+          },
+          {
+            "name": "testPKScoreUpdatesAfterReturningFromScoring",
+            "assertion": "在多人记分页录入一杆,返回列表,1 秒内 PK 得分已更新"
+          }
+        ],
+        "manual_checks": [
+          "断网状态下进入列表,PK 得分仍能即时显示",
+          "杀进程冷启动 App,进入列表,PK 得分首屏可见",
+          "在「进行中」「已完成」之间切换,PK 得分不重新加载"
+        ]
+      },
+      "done_definition": [
+        "所有 unit_tests 和 ui_tests 通过",
+        "Instruments Time Profiler 验证列表首屏不阻塞主线程",
+        "PR 描述附录屏 GIF: 添加 PK 规则 → 返回列表 → 立即可见得分"
+      ],
+      "tracking": {
+        "branch": "fix/MATCH_LIST_002-pk-score-instant-display",
+        "commit_prefix": "fix(match-list)",
+        "pr_title": "[MATCH_LIST_002] 进行中球局 PK 得分 0 秒级显示"
+      }
+    },
+
+    {
+      "id": "MATCH_LIST_003",
+      "title": "球局分组 Tab 间距收紧 12px",
+      "type": "design",
+      "priority": "P3",
+      "status": "done",
+      "depends_on": [],
+      "blocks": [],
+      "scope": {},
+      "anchors": {
+        "search_hints": ["RoundListView", "section spacing"]
+      },
+      "problem": "球局页四个分组之间间距过大",
+      "expected": "间距整体减少 12px",
+      "constraints": ["间距必须使用 Spacing Token"],
+      "acceptance": {
+        "manual_checks": ["测量四个分组标题间距,确认比改版前少 12px"]
+      },
+      "done_definition": ["已完成,保留用于回归"],
+      "tracking": {}
+    },
+
+    {
+      "id": "MULTI_SCORE_001",
+      "title": "杆数格子点击 0 秒级回显默认值 (par)",
+      "type": "bug",
+      "priority": "P0",
+      "status": "open",
+      "depends_on": [],
+      "blocks": [],
+      "scope": {
+        "allowed_paths_hint": ["多人记分页 View / ScoreCell 组件"],
+        "forbidden_paths_hint": ["计分卡详情页"]
+      },
+      "anchors": {
+        "primary_files": [],
+        "primary_symbols": [],
+        "search_hints": ["ScoreCell", "onTap", "defaultStroke", "MultiScoreView", "杆数"]
+      },
+      "problem": "点击球员杆数格子时,默认值 (par) 出现存在肉眼可见延迟,迟钝感明显",
+      "expected": "点击后默认值在一帧内出现 (< 16ms),无任何加载态",
+      "root_cause_hypothesis": "默认值计算可能挂在异步队列,或主线程被其他网络/计算任务阻塞",
+      "constraints": [
+        "默认值必须由本地纯函数给出,禁止任何 await/网络调用",
+        "禁止引入新全局状态",
+        "动画/过渡时长 <= 100ms"
+      ],
+      "acceptance": {
+        "unit_tests": [
+          {
+            "name": "testDefaultStrokeReturnsSync",
+            "assertion": "defaultStrokeForHole(holeIndex:) 同步返回 par 值,执行时间 < 1ms"
+          }
+        ],
+        "ui_tests": [
+          {
+            "name": "testTapScoreCellShowsDefaultImmediately",
+            "assertion": "tap 后下一帧 cell 显示具体数字,XCUIElement.exists 在 0.1s 内为 true"
+          }
+        ],
+        "performance": [
+          {
+            "metric": "main_thread_blocking_ms",
+            "threshold": "< 16",
+            "measurement": "XCTOSSignpostMetric 或手动 CFAbsoluteTimeGetCurrent"
+          }
+        ],
+        "manual_checks": [
+          "iPhone 11 真机连续点击 10 次不同球员格子,无累积延迟",
+          "断网状态下点击,默认值仍立即出现"
+        ]
+      },
+      "done_definition": [
+        "所有 unit_tests 和 ui_tests 通过",
+        "performance 指标达标",
+        "PR 附录屏 GIF: 快速点击多个格子,均瞬时出现默认值"
+      ],
+      "tracking": {
+        "branch": "fix/MULTI_SCORE_001-stroke-cell-instant-response",
+        "commit_prefix": "fix(multi-score)",
+        "pr_title": "[MULTI_SCORE_001] 杆数格子 0 秒级响应"
+      }
+    },
+
+    {
+      "id": "MULTI_SCORE_002",
+      "title": "球员名字字体加大加深",
+      "type": "design",
+      "priority": "P2",
+      "status": "open",
+      "depends_on": [],
+      "blocks": ["SCORECARD_003"],
+      "scope": {
+        "allowed_paths_hint": ["多人记分页 View 中球员名字 Label/Text"]
+      },
+      "anchors": {
+        "search_hints": ["MultiScoreView", "playerName", "球员名字"]
+      },
+      "problem": "球员名字偏小、偏淡,识别度不足",
+      "expected": "字号增加至少 1 级,字色更深,接近球员行主信息层级",
+      "constraints": [
+        "字号、字重、字色必须使用 Typography Token",
+        "字体规格须与 SCORECARD_003 中的计分卡详情页保持一致 (此 task 先定基准)"
+      ],
+      "acceptance": {
+        "ui_tests": [
+          {
+            "name": "testPlayerNameTextSizeIncreased",
+            "assertion": "playerName Label 字号比 baseline 大至少 1 级 (2pt)"
+          }
+        ],
+        "manual_checks": [
+          "对比改版前后截图",
+          "长名字 (中文 4 字 / 英文 12 字符) 不截断或换行错乱",
+          "深浅色模式对比度合格"
+        ]
+      },
+      "done_definition": [
+        "Typography Token 已定义并应用",
+        "PR 附改前改后截图对比"
+      ],
+      "tracking": {
+        "branch": "style/MULTI_SCORE_002-player-name-typography",
+        "commit_prefix": "style(multi-score)",
+        "pr_title": "[MULTI_SCORE_002] 球员名字字体加大加深"
+      }
+    },
+
+    {
+      "id": "MULTI_SCORE_003",
+      "title": "黄色态判定逻辑优化 - 提交后延迟 500ms 检测一致性",
+      "type": "improvement",
+      "priority": "P1",
+      "status": "open",
+      "depends_on": [],
+      "blocks": ["MULTI_SCORE_004", "SCORECARD_001"],
+      "scope": {
+        "allowed_paths_hint": ["多人记分页", "新建/抽取共享黄色态组件"]
+      },
+      "anchors": {
+        "search_hints": ["yellow", "pending", "syncState", "UIColor.yellow", ".yellow"]
+      },
+      "problem": "用户提交后格子立即变黄,等服务器返回再恢复,导致每次提交都黄色闪烁",
+      "expected": "提交后延迟 500ms 检测 client-server 一致性;一致则保持正常色 (不变黄);不一致或超时才置黄",
+      "constraints": [
+        "延迟阈值写在配置文件,不硬编码 (默认 500ms,范围 300-800ms)",
+        "格子和 PK 得分方块共用同一套黄色态判定逻辑 (抽取为 SharedComponent)",
+        "黄色态必须有明确退出条件 (数据一致 / 用户主动重试),不能卡住",
+        "此组件被 SCORECARD_001 复用,需放在 Shared 目录"
+      ],
+      "acceptance": {
+        "unit_tests": [
+          {
+            "name": "testNoYellowFlashOnNormalNetwork",
+            "assertion": "正常网络下提交,500ms 内服务器返回成功,isYellow 始终为 false"
+          },
+          {
+            "name": "testYellowAfterTimeout",
+            "assertion": "断网下提交,500ms 后 isYellow 变为 true"
+          },
+          {
+            "name": "testYellowClearsAfterReconcile",
+            "assertion": "服务器返回数据与本地一致,isYellow 立即变 false"
+          },
+          {
+            "name": "testRapidSubmissionsDoNotStackYellow",
+            "assertion": "连续提交 5 次,isYellow 状态正确不叠加"
+          }
+        ],
+        "ui_tests": [
+          {
+            "name": "testSubmitStrokeNoYellowFlash",
+            "assertion": "正常网络下提交杆数,UI 录像中无黄色帧出现"
+          }
+        ],
+        "manual_checks": [
+          "弱网 (Network Link Conditioner 500ms RTT) 验证延迟阈值表现",
+          "服务器返回冲突数据,格子保持黄色直到一致"
+        ]
+      },
+      "done_definition": [
+        "黄色态逻辑已抽取为 SharedComponent,路径在 PR 中说明",
+        "延迟配置项已加入 config 文件",
+        "所有 unit/ui 测试通过",
+        "PR 附弱网/正常网络两种场景对比录屏"
+      ],
+      "tracking": {
+        "branch": "refactor/MULTI_SCORE_003-yellow-state-delay-check",
+        "commit_prefix": "refactor(score-state)",
+        "pr_title": "[MULTI_SCORE_003] 黄色态延迟一致性判定"
+      }
+    },
+
+    {
+      "id": "MULTI_SCORE_004",
+      "title": "PK 得分等待期黄色方块视觉重做",
+      "type": "design",
+      "priority": "P2",
+      "status": "open",
+      "depends_on": ["MULTI_SCORE_003"],
+      "blocks": [],
+      "scope": {
+        "allowed_paths_hint": ["PK 得分方块 View"]
+      },
+      "anchors": {
+        "search_hints": ["PKScoreView", "yellowBlock", "pendingScore"]
+      },
+      "problem": "PK 得分等待服务器数据时的黄色方块视觉粗糙",
+      "expected": "更柔和的黄色,可加微动效 (轻微脉冲),克制不抢眼",
+      "constraints": [
+        "黄色色值取自 Color Token",
+        "动效 60fps,CPU/GPU 占用可忽略",
+        "必须配合 MULTI_SCORE_003 的逻辑 (黄色态出现频率应已显著降低)"
+      ],
+      "acceptance": {
+        "ui_tests": [
+          {
+            "name": "testPKBlockYellowColorMatchesToken",
+            "assertion": "PKScoreView 黄色态背景色 == DesignTokens.Color.pendingYellow"
+          }
+        ],
+        "manual_checks": [
+          "等待状态截图,深浅色模式各一张,视觉协调",
+          "动效顺滑,不抢眼"
+        ]
+      },
+      "done_definition": [
+        "新黄色 Token 已定义",
+        "动效用 SwiftUI 原生 API,无第三方库",
+        "PR 附动效录屏"
+      ],
+      "tracking": {
+        "branch": "style/MULTI_SCORE_004-pk-yellow-block-redesign",
+        "commit_prefix": "style(pk-score)",
+        "pr_title": "[MULTI_SCORE_004] PK 黄色方块视觉重做"
+      }
+    },
+
+    {
+      "id": "SCORECARD_001",
+      "title": "计分卡详情页黄色态逻辑统一 (复用 MULTI_SCORE_003)",
+      "type": "improvement",
+      "priority": "P1",
+      "status": "open",
+      "depends_on": ["MULTI_SCORE_003"],
+      "blocks": [],
+      "scope": {
+        "allowed_paths_hint": ["计分卡详情页"]
+      },
+      "anchors": {
+        "search_hints": ["ScorecardDetailView", "ScorecardCell"]
+      },
+      "problem": "计分卡详情页使用了独立黄色态逻辑,与多人记分页不一致",
+      "expected": "复用 MULTI_SCORE_003 抽出的 SharedComponent,行为完全一致",
+      "constraints": [
+        "禁止重新实现黄色态逻辑,必须复用 MULTI_SCORE_003 的组件",
+        "三个页面 (列表/记分/详情) 的黄色态视觉与触发时机完全一致"
+      ],
+      "acceptance": {
+        "unit_tests": [
+          {
+            "name": "testScorecardUsesSharedYellowComponent",
+            "assertion": "ScorecardDetailViewModel 使用与 MultiScoreViewModel 相同的 yellow state class"
+          }
+        ],
+        "ui_tests": [
+          {
+            "name": "testScorecardSubmitNoYellowFlash",
+            "assertion": "正常网络下修改杆数,UI 录像中无黄色帧"
+          }
+        ],
+        "manual_checks": [
+          "三个页面同时打开,提交时黄色行为一致"
+        ]
+      },
+      "done_definition": [
+        "原有黄色逻辑代码已删除",
+        "测试通过",
+        "PR diff 显示净减少代码行数"
+      ],
+      "tracking": {
+        "branch": "refactor/SCORECARD_001-reuse-yellow-component",
+        "commit_prefix": "refactor(scorecard)",
+        "pr_title": "[SCORECARD_001] 计分卡详情页黄色态复用"
+      }
+    },
+
+    {
+      "id": "SCORECARD_002",
+      "title": "PK 规则条绿色与得分格绿色统一",
+      "type": "design",
+      "priority": "P3",
+      "status": "open",
+      "depends_on": [],
+      "blocks": [],
+      "scope": {
+        "allowed_paths_hint": ["计分卡详情页"]
+      },
+      "anchors": {
+        "search_hints": ["PKRuleBar", "scoreGreen", ".green"]
+      },
+      "problem": "PK 规则条绿色与计分卡得分格绿色色值不一致",
+      "expected": "两处使用同一 Color Token",
+      "constraints": [
+        "两处必须引用同一 Token,改 Token 时同步生效"
+      ],
+      "acceptance": {
+        "unit_tests": [
+          {
+            "name": "testPKBarAndCellUseSameGreenToken",
+            "assertion": "PKRuleBar.greenColor === ScorecardCell.birdieGreen (引用同一 Token)"
+          }
+        ],
+        "manual_checks": [
+          "取色工具对比两处绿色,色值完全相同 (浅色+深色模式)"
+        ]
+      },
+      "done_definition": ["Token 引用已统一", "PR 附取色对比图"],
+      "tracking": {
+        "branch": "style/SCORECARD_002-green-color-unify",
+        "commit_prefix": "style(scorecard)",
+        "pr_title": "[SCORECARD_002] PK 规则条绿色统一"
+      }
+    },
+
+    {
+      "id": "SCORECARD_003",
+      "title": "球员名字与杆数字体与多人记分页对齐",
+      "type": "design",
+      "priority": "P2",
+      "status": "open",
+      "depends_on": ["MULTI_SCORE_002"],
+      "blocks": [],
+      "scope": {
+        "allowed_paths_hint": ["计分卡详情页"]
+      },
+      "anchors": {
+        "search_hints": ["ScorecardDetailView", "playerName", "strokeNumber"]
+      },
+      "problem": "计分卡详情页字体与多人记分页不一致,造成视觉割裂",
+      "expected": "字体 family/weight/size 完全一致,数字使用同一等宽体 (如有)",
+      "constraints": [
+        "封装为可复用组件,而非两处独立定义",
+        "引用同一 Typography Token"
+      ],
+      "acceptance": {
+        "ui_tests": [
+          {
+            "name": "testScorecardPlayerNameFontMatchesMultiScore",
+            "assertion": "两个页面 playerName Label 的 font 属性完全相同"
+          }
+        ],
+        "manual_checks": ["并排截图对比", "中英文混排表现一致"]
+      },
+      "done_definition": [
+        "字体引用同一 Token",
+        "PR 附两页面并排截图"
+      ],
+      "tracking": {
+        "branch": "style/SCORECARD_003-typography-align",
+        "commit_prefix": "style(scorecard)",
+        "pr_title": "[SCORECARD_003] 字体与多人记分页对齐"
+      }
+    },
+
+    {
+      "id": "SBS_001",
+      "title": "「第 X 洞」下方按顺序展示所有 Tee (圆点+码数)",
+      "type": "design",
+      "priority": "P3",
+      "status": "done",
+      "depends_on": [],
+      "blocks": [],
+      "scope": {},
+      "anchors": {"search_hints": ["SBSView", "TeeRow"]},
+      "problem": "Tee 顺序受性别影响,且仅展示部分",
+      "expected": "按既定顺序展示所有 Tee,圆点颜色由 Tee 名映射,性别只决定默认选中",
+      "constraints": [],
+      "acceptance": {"manual_checks": ["所有 Tee 按序展示", "圆点颜色对应"]},
+      "done_definition": ["已完成"],
+      "tracking": {}
+    },
+
+    {
+      "id": "SBS_002",
+      "title": "SBS 球员名字胶囊去除",
+      "type": "improvement",
+      "priority": "P2",
+      "status": "open",
+      "depends_on": [],
+      "blocks": [],
+      "scope": {
+        "allowed_paths_hint": ["SBS 面板 View"]
+      },
+      "anchors": {
+        "search_hints": ["SBSView", "playerCapsule", "playerSwitcher"]
+      },
+      "problem": "SBS 单球员视角不应有切换球员入口,胶囊样式造成误操作",
+      "expected": "球员名字以非可点击 Text 展示,无胶囊样式",
+      "constraints": [
+        "切换球员的入口仅保留在多人记分主页"
+      ],
+      "acceptance": {
+        "ui_tests": [
+          {
+            "name": "testSBSPlayerNameNotTappable",
+            "assertion": "SBS 中 playerName 元素 isHittable == false 或不响应 tap"
+          }
+        ],
+        "manual_checks": ["点击球员名字区域无任何切换响应"]
+      },
+      "done_definition": ["胶囊样式代码已移除", "测试通过"],
+      "tracking": {
+        "branch": "fix/SBS_002-remove-player-capsule",
+        "commit_prefix": "fix(sbs)",
+        "pr_title": "[SBS_002] SBS 球员名字胶囊去除"
+      }
+    },
+
+    {
+      "id": "SBS_003",
+      "title": "发球台 Tee 选择按钮规范化 (与旗杆按钮一致)",
+      "type": "design",
+      "priority": "P2",
+      "status": "open",
+      "depends_on": [],
+      "blocks": [],
+      "scope": {
+        "allowed_paths_hint": ["SBS 面板 View, 发球洞分支"]
+      },
+      "anchors": {
+        "search_hints": ["TeeButton", "FlagButton", "前旗", "中旗", "后旗"]
+      },
+      "problem": "发球台 Tee 按钮高度/字号与旗杆按钮不一致",
+      "expected": "Tee 按钮和旗杆按钮共用同一按钮组件,高度字号完全一致",
+      "constraints": [
+        "默认选中由性别决定,顺序与 SBS_001 一致",
+        "非发球洞 (果岭附近) 不展示 Tee 选择"
+      ],
+      "acceptance": {
+        "ui_tests": [
+          {
+            "name": "testTeeAndFlagButtonSameSize",
+            "assertion": "TeeButton.frame.height == FlagButton.frame.height,字号 token 相同"
+          }
+        ],
+        "manual_checks": ["尺子测量两组按钮"]
+      },
+      "done_definition": ["共用按钮组件", "测试通过"],
+      "tracking": {
+        "branch": "style/SBS_003-tee-button-standardize",
+        "commit_prefix": "style(sbs)",
+        "pr_title": "[SBS_003] 发球台 Tee 按钮规范化"
+      }
+    },
+
+    {
+      "id": "SBS_004",
+      "title": "推球进洞黄色标签紧邻「添加一杆」",
+      "type": "design",
+      "priority": "P3",
+      "status": "open",
+      "depends_on": [],
+      "blocks": [],
+      "scope": {
+        "allowed_paths_hint": ["SBS 果岭区域 View"]
+      },
+      "anchors": {
+        "search_hints": ["puttIn", "addStroke", "推球进洞", "添加一杆"]
+      },
+      "problem": "推球进洞标签与添加一杆按钮间距过大,视线跳跃",
+      "expected": "两者紧挨,形成连贯组合",
+      "constraints": [
+        "间距使用 Spacing Token",
+        "最小机型不重叠/换行"
+      ],
+      "acceptance": {
+        "ui_tests": [
+          {
+            "name": "testPuttInLabelAdjacentToAddStroke",
+            "assertion": "两元素垂直距离 < 8pt"
+          }
+        ],
+        "manual_checks": ["iPhone SE 上不重叠"]
+      },
+      "done_definition": ["间距符合设计稿", "PR 附截图"],
+      "tracking": {
+        "branch": "style/SBS_004-putt-in-tag-position",
+        "commit_prefix": "style(sbs)",
+        "pr_title": "[SBS_004] 推球进洞标签位置调整"
+      }
+    },
+
+    {
+      "id": "SBS_005",
+      "title": "无 SBS 数据时面板黑色遮罩 + 蓝色「+ 添加一杆」入口",
+      "type": "design",
+      "priority": "P3",
+      "status": "done",
+      "depends_on": [],
+      "blocks": [],
+      "scope": {},
+      "anchors": {"search_hints": ["SBSEmptyState"]},
+      "problem": "新球员新洞进入 SBS 时无明确入口",
+      "expected": "黑色遮罩 + 居中偏下蓝色入口按钮",
+      "constraints": [],
+      "acceptance": {"manual_checks": ["遮罩位置与按钮符合设计稿"]},
+      "done_definition": ["已完成"],
+      "tracking": {}
+    },
+
+    {
+      "id": "SBS_006",
+      "title": "击球链与按住说话间留白像素级一致",
+      "type": "design",
+      "priority": "P2",
+      "status": "open",
+      "depends_on": [],
+      "blocks": [],
+      "scope": {
+        "allowed_paths_hint": ["SBS 面板布局"]
+      },
+      "anchors": {
+        "search_hints": ["SBSPanel", "shotChain", "按住说话", "VStack"]
+      },
+      "problem": "击球链下方与按住说话之间留白过多,六个区域间距不一致",
+      "expected": "击球位置/球杆/目的/落点/击球链/按住说话六个区域之间的间距完全相同",
+      "constraints": [
+        "所有间距使用同一 Spacing Token",
+        "不影响每个区域内部的内边距"
+      ],
+      "acceptance": {
+        "ui_tests": [
+          {
+            "name": "testSBSSectionSpacingsEqual",
+            "assertion": "六个区域两两之间垂直距离差 < 1pt"
+          }
+        ],
+        "manual_checks": ["小屏/大屏机型上间距比例一致"]
+      },
+      "done_definition": ["共用 Spacing Token", "测试通过"],
+      "tracking": {
+        "branch": "style/SBS_006-section-spacing-uniform",
+        "commit_prefix": "style(sbs)",
+        "pr_title": "[SBS_006] SBS 区域间距像素级统一"
+      }
+    },
+
+    {
+      "id": "SBS_007",
+      "title": "击球位置到旗杆码数: 字号+2 + 居中弹框输入",
+      "type": "improvement",
+      "priority": "P1",
+      "status": "open",
+      "depends_on": ["SBS_009"],
+      "blocks": [],
+      "scope": {
+        "allowed_paths_hint": ["SBS 面板击球位置区域"]
+      },
+      "anchors": {
+        "search_hints": ["distanceToPin", "yardageDisplay", "码数", "到旗杆"]
+      },
+      "problem": "码数字号偏小,展示框太大太长不精致,输入交互不优雅",
+      "expected": "1) 字号+2; 2) 点击展示框弹出居中偏下弹框,标题「到旗杆的距离?」,数字输入,确认/取消; 3) 展示框宽度收紧",
+      "constraints": [
+        "弹框组件复用 SBS_009 的实现",
+        "确认按钮触面 >= 44pt"
+      ],
+      "acceptance": {
+        "unit_tests": [
+          {
+            "name": "testYardageDisplayFontSize",
+            "assertion": "yardage Label 字号比 baseline 大 2pt"
+          }
+        ],
+        "ui_tests": [
+          {
+            "name": "testTapYardageOpensCenteredModal",
+            "assertion": "tap 后弹框出现在屏幕居中偏下,标题为「到旗杆的距离?」"
+          },
+          {
+            "name": "testCancelButtonDoesNotModifyValue",
+            "assertion": "弹框打开后取消,原 yardage 值不变"
+          }
+        ],
+        "manual_checks": [
+          "确认按钮触面 >= 44pt 单手可达",
+          "展示框宽度紧凑不浪费空间但不挤压邻近元素"
+        ]
+      },
+      "done_definition": ["弹框组件复用 SBS_009", "测试通过"],
+      "tracking": {
+        "branch": "feat/SBS_007-yardage-input-modal",
+        "commit_prefix": "feat(sbs)",
+        "pr_title": "[SBS_007] 击球位置码数交互优化"
+      }
+    },
+
+    {
+      "id": "SBS_008",
+      "title": "后旗使用蓝色图标 (替换黄色旗)",
+      "type": "design",
+      "priority": "P3",
+      "status": "open",
+      "depends_on": [],
+      "blocks": [],
+      "scope": {
+        "allowed_paths_hint": ["SBS 旗杆选择 View"]
+      },
+      "anchors": {
+        "search_hints": ["backFlag", "后旗", "FlagIcon"]
+      },
+      "problem": "后旗使用黄色旗图标,与前/中旗视觉混淆",
+      "expected": "后旗改为蓝色图标",
+      "constraints": [
+        "蓝色色值取自 Token",
+        "图标资源同步更新"
+      ],
+      "acceptance": {
+        "ui_tests": [
+          {
+            "name": "testBackFlagIconIsBlue",
+            "assertion": "后旗 Icon tintColor == DesignTokens.Color.flagBlue"
+          }
+        ],
+        "manual_checks": ["选中/未选中状态颜色正确", "深浅色模式对比度足够"]
+      },
+      "done_definition": ["Icon 资源已更新", "测试通过"],
+      "tracking": {
+        "branch": "style/SBS_008-back-flag-blue-icon",
+        "commit_prefix": "style(sbs)",
+        "pr_title": "[SBS_008] 后旗蓝色图标"
+      }
+    },
+
+    {
+      "id": "SBS_009",
+      "title": "码数输入弹框重写 (性能 + 遮罩 + 不透明)",
+      "type": "bug",
+      "priority": "P0",
+      "status": "open",
+      "depends_on": [],
+      "blocks": ["SBS_007"],
+      "scope": {
+        "allowed_paths_hint": ["SBS 弹框组件"]
+      },
+      "anchors": {
+        "search_hints": ["YardageInputModal", "码数输入", "Modal"]
+      },
+      "problem": "现有码数输入弹框卡顿到无法使用,缺遮罩,本体可能透明",
+      "expected": "重写为高性能弹框组件: 60fps 顺滑;背景半透明遮罩;弹框本体不透明;确认按钮 >= 44pt",
+      "constraints": [
+        "组件需可被 SBS_007 复用",
+        "动画 <= 200ms",
+        "禁止主线程阻塞"
+      ],
+      "acceptance": {
+        "unit_tests": [
+          {
+            "name": "testYardageModalIsReusable",
+            "assertion": "组件接受 title/initialValue/onConfirm 参数,可独立使用"
+          }
+        ],
+        "ui_tests": [
+          {
+            "name": "testYardageModalAppearsInUnder200ms",
+            "assertion": "tap 触发到弹框完全可见 < 200ms"
+          },
+          {
+            "name": "testYardageModalConfirmButtonHitArea",
+            "assertion": "确认按钮 frame >= 44x44"
+          }
+        ],
+        "performance": [
+          {
+            "metric": "fps_during_modal_animation",
+            "threshold": ">= 58",
+            "measurement": "XCTOSSignpostMetric"
+          }
+        ],
+        "manual_checks": [
+          "iPhone 11 上 60fps 顺滑",
+          "连续打开关闭 10 次性能无衰减",
+          "横竖屏切换不错位"
+        ]
+      },
+      "done_definition": [
+        "Instruments 验证主线程无阻塞",
+        "组件目录在 Shared/Components/",
+        "PR 附录屏: 弹出/输入/关闭全程顺滑"
+      ],
+      "tracking": {
+        "branch": "fix/SBS_009-yardage-modal-rewrite",
+        "commit_prefix": "fix(sbs)",
+        "pr_title": "[SBS_009] 码数输入弹框重写"
+      }
+    },
+
+    {
+      "id": "MAP_001",
+      "title": "卫星地图入口可发现性提升",
+      "type": "design",
+      "priority": "P2",
+      "status": "open",
+      "depends_on": [],
+      "blocks": [],
+      "scope": {
+        "allowed_paths_hint": ["地图入口所在的页面"]
+      },
+      "anchors": {
+        "search_hints": ["satelliteMap", "卫星地图", "MapEntryButton"]
+      },
+      "problem": "卫星地图入口太含蓄,用户以为是配图,无点击欲望",
+      "expected": "明确视觉 affordance: 提示文案/悬浮按钮/或其他设计师方案",
+      "constraints": [
+        "点击区域 >= 44pt",
+        "保持克制不抢注意力",
+        "深浅色模式都清晰"
+      ],
+      "acceptance": {
+        "ui_tests": [
+          {
+            "name": "testMapEntryHitArea",
+            "assertion": "MapEntryButton frame >= 44x44"
+          }
+        ],
+        "manual_checks": [
+          "走查: 新用户 3 秒内识别为可点击",
+          "深浅色模式都清晰"
+        ]
+      },
+      "done_definition": ["设计方案在 PR 中说明", "走查通过"],
+      "tracking": {
+        "branch": "style/MAP_001-entry-affordance",
+        "commit_prefix": "style(map)",
+        "pr_title": "[MAP_001] 卫星地图入口可发现性"
+      }
+    },
+
+    {
+      "id": "MAP_002",
+      "title": "首次打开地图: 起点=GPS + 视图自动定位",
+      "type": "improvement",
+      "priority": "P1",
+      "status": "open",
+      "depends_on": [],
+      "blocks": [],
+      "scope": {
+        "allowed_paths_hint": ["卫星地图页 View / ViewModel"]
+      },
+      "anchors": {
+        "search_hints": ["MapView", "currentLocation", "CLLocationManager"]
+      },
+      "problem": "首次打开地图起点不正确,视图缩放方位不合理,走动时还会自动调整造成干扰",
+      "expected": "1) 起点=GPS (定位开启时); 2) 终点屏幕上居中,起点屏幕下居中; 3) 走动中不再调整地图视图",
+      "constraints": [
+        "定位权限关闭时回退到默认起点 (球洞发球台) + 提示开启",
+        "GPS 漂移 < 10m 不触发起点跳动",
+        "走动期间不调整视图的策略覆盖手势缩放、自动跟随等所有路径"
+      ],
+      "acceptance": {
+        "unit_tests": [
+          {
+            "name": "testInitialMapViewportCalculation",
+            "assertion": "给定起点终点,计算的 region 满足 终点 y < center.y, 起点 y > center.y"
+          },
+          {
+            "name": "testGPSDriftBelowThresholdDoesNotMoveStart",
+            "assertion": "GPS 变化 < 10m 时起点坐标不更新"
+          }
+        ],
+        "ui_tests": [
+          {
+            "name": "testMapInitialViewportLayout",
+            "assertion": "首次打开地图,旗杆 marker 在屏幕上半部,用户 marker 在屏幕下半部"
+          }
+        ],
+        "manual_checks": [
+          "8 号洞 100 码处真机验证起点位置正确",
+          "走动 50 米后地图视图保持不变",
+          "定位权限关闭时回退到发球台"
+        ]
+      },
+      "done_definition": [
+        "测试通过",
+        "PR 附真机录屏: 打开地图 + 走动验证"
+      ],
+      "tracking": {
+        "branch": "feat/MAP_002-initial-viewport-and-gps-start",
+        "commit_prefix": "feat(map)",
+        "pr_title": "[MAP_002] 地图首次打开 GPS 起点与自动布局"
+      }
+    },
+
+    {
+      "id": "MAP_003",
+      "title": "Header 首次起点的掉落动画移除",
+      "type": "bug",
+      "priority": "P2",
+      "status": "open",
+      "depends_on": [],
+      "blocks": [],
+      "scope": {
+        "allowed_paths_hint": ["地图页 Header 组件"]
+      },
+      "anchors": {
+        "search_hints": ["Header", "dropAnimation", "transition", "offset"]
+      },
+      "problem": "Header 首次起点时存在不必要的从上往下掉落动画",
+      "expected": "Header 内容直接呈现,无任何掉落或淡入动画",
+      "constraints": [
+        "动画代码彻底移除而非设为 0 时长",
+        "确认无其他依赖该动画的逻辑"
+      ],
+      "acceptance": {
+        "ui_tests": [
+          {
+            "name": "testHeaderNoDropAnimationOnFirstShow",
+            "assertion": "首次进入起点状态,Header 元素位移变化 == 0"
+          }
+        ],
+        "manual_checks": ["重复进入/退出起点状态 Header 表现一致"]
+      },
+      "done_definition": ["动画代码已删除", "测试通过"],
+      "tracking": {
+        "branch": "fix/MAP_003-remove-header-drop-animation",
+        "commit_prefix": "fix(map)",
+        "pr_title": "[MAP_003] Header 掉落动画移除"
+      }
+    },
+
+    {
+      "id": "GLOBAL_001",
+      "title": "登录画面 GolfHub Logo 字体更换为衬线",
+      "type": "design",
+      "priority": "P3",
+      "status": "open",
+      "depends_on": [],
+      "blocks": [],
+      "scope": {
+        "allowed_paths_hint": ["登录页 View"]
+      },
+      "anchors": {
+        "search_hints": ["LoginView", "logoText", "GolfHub"]
+      },
+      "problem": "登录画面 GolfHub Logo 字体不够品牌感",
+      "expected": "使用项目已打包的带衬线英文字体",
+      "constraints": [
+        "字体随 App 打包,启动即可用,无网络下载"
+      ],
+      "acceptance": {
+        "ui_tests": [
+          {
+            "name": "testLoginLogoUsesSerifFont",
+            "assertion": "logoText.font.fontName 匹配项目内衬线字体名"
+          }
+        ],
+        "manual_checks": ["不同分辨率下渲染清晰", "字距与设计稿一致"]
+      },
+      "done_definition": ["字体文件已确认打包", "测试通过"],
+      "tracking": {
+        "branch": "style/GLOBAL_001-login-logo-serif-font",
+        "commit_prefix": "style(global)",
+        "pr_title": "[GLOBAL_001] 登录画面 Logo 衬线字体"
+      }
+    },
+
+    {
+      "id": "GLOBAL_002",
+      "title": "PK 拉斯创建 8431 分数窗口下方留白移除",
+      "type": "design",
+      "priority": "P3",
+      "status": "open",
+      "depends_on": [],
+      "blocks": [],
+      "scope": {
+        "allowed_paths_hint": ["PK 规则创建 - 拉斯流程"]
+      },
+      "anchors": {
+        "search_hints": ["LasRule", "拉斯", "ScoreWindow", "8431"]
+      },
+      "problem": "选择 8431 分数组合时下方有多余留白",
+      "expected": "下方紧贴下一个区块,无空白",
+      "constraints": [
+        "通过约束/布局调整完成,禁止硬编码负值 margin",
+        "不影响其他规则 (捞火锅等) 布局"
+      ],
+      "acceptance": {
+        "ui_tests": [
+          {
+            "name": "testLasScoreWindowNoBottomPadding",
+            "assertion": "ScoreWindow 元素底部到下一区块距离符合 Spacing Token"
+          }
+        ],
+        "manual_checks": ["切换不同分数组合,留白处理一致"]
+      },
+      "done_definition": ["布局调整不破坏其他规则页", "测试通过"],
+      "tracking": {
+        "branch": "style/GLOBAL_002-las-score-window-padding",
+        "commit_prefix": "style(pk-rule)",
+        "pr_title": "[GLOBAL_002] 拉斯分数窗口留白修复"
+      }
+    }
+  ]
+}
