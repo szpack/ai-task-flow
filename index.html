@@ -841,7 +841,7 @@
 
 <header>
   <div class="page-heading">
-    <h1>AI Task Flow</h1>
+    <h1 data-i18n="appTitle">AI Task Flow</h1>
   </div>
   <div class="header-actions">
     <div class="lang-switch" aria-label="Language">
@@ -997,7 +997,8 @@ const LANG_STORAGE_KEY = 'ai-task-flow-lang';
 
 const I18N = {
   zh: {
-    subtitle: 'AI 任务流转台 · 需求结构化 · Codex / Claude 提示词 · 执行结果回填',
+    appTitle: 'AI 任务流转台',
+    subtitle: '需求结构化 · Codex / Claude 提示词 · 执行结果回填',
     newTaskButton: '+ 新任务',
     loading: '正在加载 tasks.json...',
     statOpen: '待处理',
@@ -1121,6 +1122,7 @@ const I18N = {
     legacyMap: '卫星地图'
   },
   en: {
+    appTitle: 'AI Task Flow',
     subtitle: 'AI task flow · Structured intake · Codex / Claude prompts · Execution backfill',
     newTaskButton: '+ New Task',
     loading: 'Loading tasks.json...',
