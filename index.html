@@ -392,6 +392,9 @@
   .action-btn.primary:hover {
     background: var(--augusta-green);
   }
+  .utility-hidden {
+    display: none;
+  }
   .action-btn.new-task {
     display: inline-flex;
     align-items: center;
@@ -1039,8 +1042,8 @@
 
   <div class="selection-bar">
     <span class="selection-count" id="selection-count">0 tasks selected</span>
-    <button class="action-btn" id="btn-select-visible" data-i18n="selectVisible">Select filtered tasks</button>
-    <button class="action-btn" id="btn-clear-selection" data-i18n="clearSelection">Clear selection</button>
+    <button class="action-btn utility-hidden" id="btn-select-visible" data-i18n="selectVisible">Select filtered tasks</button>
+    <button class="action-btn utility-hidden" id="btn-clear-selection" data-i18n="clearSelection">Clear selection</button>
     <button class="action-btn primary" id="btn-generate-dev-prompt" data-i18n="generateDevPrompt">Generate development prompt</button>
   </div>
   <div class="field-shell">
