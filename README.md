@@ -41,4 +41,4 @@ http://localhost:8000/task-viewer.html
 
 ## License
 
-未指定。公开仓库不等同于开源授权；如需正式开源，建议补充 `LICENSE` 文件。
+MIT
