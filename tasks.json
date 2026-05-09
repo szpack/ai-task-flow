@@ -81,12 +81,54 @@
       "implementation_runs": []
     },
     {
+      "id": "TASK_001",
+      "title": "Track a structured task through its lifecycle",
+      "type": "feature",
+      "priority": "P1",
+      "status": "open",
+      "depends_on": ["IDEA_001"],
+      "blocks": ["PROMPT_001"],
+      "scope": {
+        "allowed_paths_hint": ["tasks.json", "index.html"],
+        "forbidden_paths_hint": []
+      },
+      "anchors": {
+        "primary_files": ["tasks.json"],
+        "primary_symbols": ["tasks", "status", "acceptance"],
+        "search_hints": ["status", "depends_on", "done_definition"]
+      },
+      "problem": "A structured task should be more than a title. It needs enough context for a human or AI agent to understand scope, constraints, acceptance checks, and tracking metadata.",
+      "expected": "Each task record can move from open to done or skipped while preserving its problem statement, expected result, scope hints, acceptance checks, and implementation history.",
+      "constraints": [
+        "Use stable task IDs",
+        "Keep lifecycle state explicit",
+        "Do not mix execution results into the original problem statement"
+      ],
+      "acceptance": {
+        "manual_checks": [
+          "Expand TASK_001 in the viewer",
+          "Confirm problem, expected result, constraints, scope, and acceptance sections are visible",
+          "Mark it done and reset it back to open"
+        ]
+      },
+      "done_definition": [
+        "A user can understand the task lifecycle from this example alone"
+      ],
+      "tracking": {
+        "branch": "feat/TASK_001-structured-task-lifecycle",
+        "commit_prefix": "feat(task)",
+        "pr_title": "[TASK_001] Structured task lifecycle example"
+      },
+      "raw_inputs": [],
+      "implementation_runs": []
+    },
+    {
       "id": "PROMPT_001",
       "title": "Generate AI coding prompts from selected tasks",
       "type": "feature",
       "priority": "P0",
       "status": "open",
-      "depends_on": ["IDEA_001"],
+      "depends_on": ["TASK_001"],
       "blocks": ["RUN_001"],
       "scope": {
         "allowed_paths_hint": ["index.html"],
