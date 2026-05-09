@@ -54,16 +54,21 @@
 
   /* Header */
   header {
+    position: sticky;
+    top: 0;
+    z-index: 800;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 16px;
+    background: var(--masters-bg);
     border-bottom: 1px solid var(--masters-line);
-    padding-bottom: 16px;
-    margin-bottom: 20px;
+    padding: 0 0 10px;
+    margin-bottom: 8px;
   }
   .page-heading {
     min-width: 0;
+    overflow: hidden;
   }
   .header-actions {
     display: flex;
@@ -107,6 +112,10 @@
   .subtitle {
     color: var(--cream-secondary);
     font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 20px;
   }
 
   /* Stats bar */
@@ -799,7 +808,8 @@
       font-size: 22px;
     }
     .subtitle {
-      display: none;
+      display: block;
+      max-width: calc(100vw - 170px);
     }
     .stats {
       grid-template-columns: repeat(5, minmax(54px, 1fr));
@@ -836,16 +846,16 @@
 <header>
   <div class="page-heading">
     <h1>AI Task Flow</h1>
-    <div class="subtitle" data-i18n="subtitle">AI task flow · Structured intake · Codex / Claude prompts · Execution backfill</div>
   </div>
   <div class="header-actions">
     <div class="lang-switch" aria-label="Language">
       <button class="lang-btn" data-lang="zh" title="Chinese" aria-label="Chinese">🇨🇳</button>
       <button class="lang-btn" data-lang="en" title="English" aria-label="English">🇺🇸</button>
     </div>
-    <button class="action-btn new-task" id="btn-new-task" data-i18n="newTaskButton">+ New task</button>
+    <button class="action-btn new-task" id="btn-new-task" data-i18n="newTaskButton">+ New Task</button>
   </div>
 </header>
+<div class="subtitle" data-i18n="subtitle">AI task flow · Structured intake · Codex / Claude prompts · Execution backfill</div>
 
 <div id="loading" class="loading" data-i18n="loading">Loading tasks.json...</div>
 <div id="content" style="display: none;">
@@ -924,7 +934,7 @@
   <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="new-task-title">
     <div class="modal-header">
       <div>
-        <div class="modal-kicker" data-i18n="newTaskKicker">New task</div>
+        <div class="modal-kicker" data-i18n="newTaskKicker">New Task</div>
         <div class="modal-title" id="new-task-title" data-i18n="newTaskTitle">Intake box</div>
         <div class="manager-copy" data-i18n="newTaskCopy">Turn a rough request into a structured task prompt, then import the JSON returned by AI.</div>
       </div>
@@ -1116,7 +1126,7 @@ const I18N = {
   },
   en: {
     subtitle: 'AI task flow · Structured intake · Codex / Claude prompts · Execution backfill',
-    newTaskButton: '+ New task',
+    newTaskButton: '+ New Task',
     loading: 'Loading tasks.json...',
     statOpen: 'Open',
     statCurrent: 'Current',
@@ -1145,7 +1155,7 @@ const I18N = {
     copy: 'Copy',
     copyDevPrompt: 'Copy development prompt',
     copyStructurePrompt: 'Copy structured task prompt',
-    newTaskKicker: 'New task',
+    newTaskKicker: 'New Task',
     newTaskTitle: 'Intake box',
     newTaskCopy: 'Turn a rough request into a structured task prompt, then import the JSON returned by AI.',
     close: 'Close',
