@@ -117,7 +117,7 @@
   /* Stats bar */
   .stats {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(220px, 1.35fr) minmax(0, 1fr);
     gap: 8px;
     margin-bottom: 0;
   }
@@ -402,15 +402,27 @@
   .chip.p2.active { background: var(--p2); color: var(--paper); }
 
   .search-bar {
-    flex: 1;
-    min-width: 200px;
-    padding: 6px 12px;
+    width: 100%;
+    min-width: 0;
+    padding: 8px 12px 8px 34px;
     border: 1px solid var(--line);
     border-radius: 6px;
     background: var(--paper);
     color: var(--ink);
     font-family: inherit;
     font-size: 13px;
+  }
+  .search-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    color: var(--ink-faint);
+    font-size: 13px;
+    pointer-events: none;
   }
   .search-bar:focus {
     outline: none;
@@ -958,7 +970,7 @@
       max-width: calc(100vw - 170px);
     }
     .stats {
-      grid-template-columns: repeat(5, minmax(54px, 1fr));
+      grid-template-columns: repeat(4, minmax(54px, 1fr)) minmax(180px, 1.6fr) minmax(64px, 1fr);
       overflow-x: auto;
       padding-bottom: 2px;
     }
@@ -1051,6 +1063,10 @@
       <div class="stat in-progress"><div class="stat-num" id="stat-progress">0</div><div class="stat-label" data-i18n="statCurrent">In Progress</div></div>
       <div class="stat done"><div class="stat-num" id="stat-done">0</div><div class="stat-label" data-i18n="statDone">Done</div></div>
       <div class="stat skipped"><div class="stat-num" id="stat-skipped">0</div><div class="stat-label" data-i18n="statSkipped">Skipped</div></div>
+      <div class="search-field">
+        <span class="search-icon" aria-hidden="true">🔍</span>
+        <input type="text" class="search-bar" id="search" data-i18n-placeholder="searchPlaceholder" placeholder="Search task ID, title, or description...">
+      </div>
       <div class="stat p0"><div class="stat-num" id="stat-p0">0</div><div class="stat-label" data-i18n="statP0Open">P0 Open</div></div>
     </div>
 
@@ -1076,7 +1092,6 @@
       <button class="chip" data-status="done" data-i18n="done">Done</button>
       <button class="chip" data-status="skipped" data-i18n="skipped">Skipped</button>
     </div>
-    <input type="text" class="search-bar" id="search" data-i18n-placeholder="searchPlaceholder" placeholder="Search task ID, title, or description...">
   </div>
 
   <div class="actions-row">
