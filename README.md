@@ -1,8 +1,10 @@
 # AI Task Flow
 
-AI Task Flow is a lightweight, local-first workflow tool for AI-assisted development. It turns rough ideas into structured task records, sends selected tasks to AI coding agents as precise prompts, and stores structured execution results back into the same task library.
+AI Task Flow turns rough ideas into executable, trackable, backfillable AI development tasks.
 
-中文名：AI 任务流转台。它把模糊需求转成结构化任务，并在 Codex / Claude 开发提示词、执行结果回填和任务追踪之间形成闭环。
+It is a lightweight, local-first workflow tool for AI-assisted development. It turns rough ideas into structured task records, sends selected tasks to AI coding agents as precise prompts, and stores structured execution results back into the same task library.
+
+中文名：AI 任务流转台。它把模糊想法变成可执行、可追踪、可回填的 AI 开发任务。
 
 ## Features
 
