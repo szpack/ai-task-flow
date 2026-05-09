@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task Viewer</title>
+<style>
+  :root {
+    --masters-bg: #0A2818;
+    --masters-card: rgba(245, 224, 143, 0.08);
+    --masters-card-live: rgba(245, 224, 143, 0.10);
+    --masters-line: rgba(212, 180, 106, 0.32);
+    --paper: #F1EAD0;
+    --paper-soft: #F7F1D8;
+    --paper-warm: #F5EFE0;
+    --paper-alt: #FAEEDA;
+    --cream-text: #F1EAD0;
+    --cream-secondary: rgba(241, 234, 208, 0.72);
+    --cream-tertiary: rgba(241, 234, 208, 0.48);
+    --ink: #1C1A14;
+    --ink-soft: #5A5448;
+    --ink-faint: #8A8475;
+    --line: rgba(28, 26, 20, 0.10);
+    --accent: #D4B46A;
+    --accent-bright: #F5E08F;
+    --augusta-green: #1F5A3D;
+    --augusta-green-deep: #0A2818;
+    --bg: var(--paper-warm);
+    --bg-alt: var(--paper-alt);
+
+    --p0: #C8102E;
+    --p1: #D9A04E;
+    --p2: #5A5448;
+
+    --done: #2D6A4F;
+    --skipped: #8A8475;
+    --open: #1C1A14;
+    --in-progress: #D4B46A;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Source Han Serif SC", serif;
+    background: var(--masters-bg);
+    color: var(--cream-text);
+    line-height: 1.6;
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+    font-size: 14px;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid var(--masters-line);
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+  }
+  .page-heading {
+    min-width: 0;
+  }
+  h1 {
+    font-family: "Cormorant Garamond", "Source Han Serif SC", serif;
+    font-size: 26px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    color: var(--cream-text);
+  }
+  .subtitle {
+    color: var(--cream-secondary);
+    font-size: 12px;
+  }
+
+  /* Stats bar */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .stat {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px;
+    background: var(--paper);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(212, 180, 106, 0.22);
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.10);
+  }
+  .stat-num {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 10px;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-top: 0;
+    white-space: nowrap;
+  }
+  .stat.done .stat-num { color: var(--done); }
+  .stat.skipped .stat-num { color: var(--skipped); }
+  .stat.open .stat-num { color: var(--ink); }
+  .stat.p0 .stat-num { color: var(--p0); }
+  .stat.in-progress .stat-num { color: var(--accent); }
+
+  /* Progress bar */
+  .progress-wrapper {
+    margin-bottom: 20px;
+  }
+  .progress-bar {
+    height: 8px;
+    background: var(--masters-card);
+    border-radius: 999px;
+    overflow: hidden;
+    display: flex;
+    border: 1px solid rgba(245, 224, 143, 0.12);
+  }
+  .progress-done { background: var(--done); }
+  .progress-skipped { background: var(--skipped); }
+  .progress-bar > div { height: 100%; transition: width 0.3s; }
+
+  /* Current task pin */
+  .current-pin {
+    background: var(--masters-card-live);
+    color: var(--cream-text);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    border: 1px solid var(--masters-line);
+    box-shadow: inset 0 1px 0 rgba(245, 224, 143, 0.10), 0 14px 36px rgba(0, 0, 0, 0.18);
+  }
+  .current-pin .pin-label {
+    font-family: "Cormorant Garamond", serif;
+    font-style: italic;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent-bright);
+    margin-bottom: 6px;
+  }
+  .current-pin .pin-task-id {
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 13px;
+    color: var(--accent-bright);
+    margin-bottom: 4px;
+  }
+  .current-pin .pin-title {
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .current-pin.empty {
+    background: var(--masters-card);
+    color: var(--cream-tertiary);
+    border: 1px dashed rgba(241, 234, 208, 0.30);
+    text-align: center;
+  }
+  .current-pin.empty .pin-label { color: var(--cream-tertiary); }
+  .pin-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+  }
+  .pin-btn {
+    background: rgba(241, 234, 208, 0.12);
+    color: var(--cream-text);
+    border: 1px solid rgba(241, 234, 208, 0.28);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .pin-btn:hover {
+    background: rgba(241, 234, 208, 0.22);
+  }
+
+  /* Filter row */
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+    align-items: center;
+  }
+  .filter-group {
+    display: flex;
+    gap: 4px;
+    padding: 2px;
+    background: var(--masters-card);
+    border: 1px solid rgba(245, 224, 143, 0.12);
+    border-radius: 6px;
+  }
+  .filter-group-label {
+    font-size: 10px;
+    color: var(--cream-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 0 8px;
+    align-self: center;
+  }
+  .chip {
+    padding: 5px 12px;
+    border-radius: 4px;
+    background: transparent;
+    border: none;
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--cream-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .chip:hover { color: var(--cream-text); }
+  .chip.active {
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .chip.p0.active { background: var(--p0); color: var(--paper); }
+  .chip.p1.active { background: var(--p1); color: var(--ink); }
+  .chip.p2.active { background: var(--p2); color: var(--paper); }
+
+  .search-bar {
+    flex: 1;
+    min-width: 200px;
+    padding: 6px 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 13px;
+  }
+  .search-bar:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(212, 180, 106, 0.18);
+  }
+
+  .actions-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .action-btn {
+    padding: 6px 14px;
+    background: var(--paper);
+    border: 1px solid rgba(212, 180, 106, 0.20);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--ink);
+    transition: all 0.15s;
+  }
+  .action-btn:hover {
+    background: var(--paper-alt);
+    border-color: var(--accent);
+  }
+  .action-btn.primary {
+    background: var(--ink);
+    color: var(--bg-alt);
+    border-color: var(--ink);
+  }
+  .action-btn.primary:hover {
+    background: var(--augusta-green);
+  }
+  .action-btn.new-task {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--accent-bright);
+    color: var(--augusta-green-deep);
+    border-color: var(--accent-bright);
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    white-space: nowrap;
+  }
+  .action-btn.new-task:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--augusta-green-deep);
+  }
+
+  /* Task category */
+  .category {
+    margin-bottom: 24px;
+  }
+  .category-header {
+    font-family: "Cormorant Garamond", serif;
+    font-style: italic;
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--masters-line);
+    display: flex;
+    justify-content: space-between;
+  }
+  .category-count {
+    color: var(--cream-tertiary);
+    font-size: 11px;
+    font-style: normal;
+    letter-spacing: 0;
+  }
+
+  /* Task card */
+  .task {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    transition: all 0.15s;
+  }
+  .task.done {
+    opacity: 0.55;
+    background: rgba(241, 234, 208, 0.84);
+  }
+  .task.skipped {
+    opacity: 0.45;
+    background: rgba(241, 234, 208, 0.70);
+  }
+  .task.current {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(212, 180, 106, 0.2);
+  }
+  .task-header {
+    padding: 10px 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .task-header:hover { background: rgba(212, 180, 106, 0.08); }
+
+  .task-status-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--ink-faint);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+  }
+  .task.done .task-status-icon {
+    background: var(--done);
+    border-color: var(--done);
+    color: var(--paper);
+  }
+  .task.skipped .task-status-icon {
+    background: var(--skipped);
+    border-color: var(--skipped);
+    color: var(--paper);
+  }
+  .task.current .task-status-icon {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--ink);
+  }
+
+  .task-priority {
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: var(--paper);
+    flex-shrink: 0;
+    font-weight: 600;
+  }
+  .task-priority.p0 { background: var(--p0); }
+  .task-priority.p1 { background: var(--p1); color: var(--ink); }
+  .task-priority.p2 { background: var(--p2); }
+
+  .task-id {
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    flex-shrink: 0;
+  }
+  .task-title {
+    flex: 1;
+    font-size: 14px;
+    color: var(--ink);
+  }
+  .task.done .task-title { text-decoration: line-through; color: var(--ink-faint); }
+  .task.skipped .task-title { text-decoration: line-through; color: var(--ink-faint); }
+
+  .task-toggle {
+    color: var(--ink-faint);
+    font-size: 11px;
+    transition: transform 0.15s;
+  }
+  .task.expanded .task-toggle { transform: rotate(90deg); }
+
+  .task-detail {
+    padding: 14px 16px 16px 50px;
+    border-top: 1px solid var(--line);
+    background: var(--paper-soft);
+    display: none;
+    font-size: 13px;
+  }
+  .task.expanded .task-detail { display: block; }
+
+  .detail-section {
+    margin-bottom: 12px;
+  }
+  .detail-section:last-child { margin-bottom: 0; }
+  .detail-label {
+    font-family: "Cormorant Garamond", serif;
+    font-style: italic;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .detail-content {
+    color: var(--ink);
+    line-height: 1.7;
+  }
+  .detail-content ul {
+    padding-left: 18px;
+    margin-top: 4px;
+  }
+  .detail-content li {
+    margin-bottom: 2px;
+  }
+  .detail-content code {
+    background: rgba(28, 26, 20, 0.06);
+    padding: 1px 5px;
+    border-radius: 2px;
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 11px;
+  }
+
+  .task-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--line);
+  }
+  .task-action-btn {
+    padding: 5px 12px;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--ink-soft);
+    transition: all 0.15s;
+  }
+  .task-action-btn:hover {
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+  .task-action-btn.done-btn:hover { background: var(--done); color: var(--paper); border-color: var(--done); }
+  .task-action-btn.skip-btn:hover { background: var(--skipped); color: var(--paper); border-color: var(--skipped); }
+  .task-action-btn.pin-btn:hover { background: var(--accent); color: var(--ink); border-color: var(--accent); }
+  .task-action-btn.reset-btn:hover { background: var(--ink); color: var(--bg-alt); }
+  .task-action-btn.active {
+    background: var(--accent);
+    color: var(--ink);
+    border-color: var(--accent);
+  }
+
+  .task-tag {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 3px;
+    background: rgba(212, 180, 106, 0.12);
+    color: var(--ink-soft);
+    font-size: 10px;
+    margin-left: 4px;
+    border: 1px solid rgba(212, 180, 106, 0.2);
+  }
+
+  /* Manager workbench */
+  .manager {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    margin: 18px 0;
+  }
+  .manager-panel {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px;
+    min-width: 0;
+  }
+  .manager-title {
+    font-family: "Cormorant Garamond", serif;
+    font-style: italic;
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .manager-copy {
+    color: var(--ink-soft);
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+  .manager-field {
+    width: 100%;
+    min-height: 96px;
+    resize: vertical;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--ink);
+    background: var(--paper-soft);
+  }
+  .manager-field.short {
+    min-height: 52px;
+  }
+  .field-shell {
+    position: relative;
+  }
+  .field-shell .manager-field {
+    padding-right: 42px;
+  }
+  .field-copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(212, 180, 106, 0.34);
+    border-radius: 4px;
+    background: rgba(241, 234, 208, 0.88);
+    color: var(--ink-soft);
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 1;
+    transition: all 0.15s;
+  }
+  .field-copy-btn:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--ink);
+  }
+  .manager-select-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .manager-select {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--paper-soft);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+  .manager-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .manager-output {
+    min-height: 130px;
+    margin-top: 8px;
+    background: rgba(247, 241, 216, 0.82);
+  }
+  .selection-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    margin: 10px 0 14px;
+    background: var(--masters-card);
+    border: 1px solid rgba(245, 224, 143, 0.12);
+    border-radius: 6px;
+  }
+  .selection-count {
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    color: var(--cream-secondary);
+    margin-right: auto;
+  }
+  .task-select {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    accent-color: var(--accent);
+  }
+  .implementation-run {
+    border-left: 2px solid var(--accent);
+    padding-left: 8px;
+    margin-top: 6px;
+    color: var(--ink-soft);
+    font-size: 12px;
+  }
+  .task-modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    z-index: 900;
+  }
+  .task-modal.open {
+    display: block;
+  }
+  .modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 40, 24, 0.70);
+  }
+  .modal-sheet {
+    position: relative;
+    width: min(1120px, calc(100vw - 32px));
+    max-height: calc(100vh - 40px);
+    margin: 20px auto;
+    overflow: auto;
+    background: var(--paper-warm);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
+    padding: 18px;
+  }
+  .modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid rgba(212, 180, 106, 0.28);
+  }
+  .modal-kicker {
+    font-family: "Cormorant Garamond", serif;
+    font-style: italic;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-size: 12px;
+  }
+  .modal-title {
+    font-size: 22px;
+    color: var(--ink);
+  }
+  .modal-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    color: var(--ink);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+  }
+  .modal-close:hover {
+    border-color: var(--accent);
+    background: var(--paper-alt);
+  }
+  .new-task-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--ink);
+    color: var(--paper-alt);
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 13px;
+    transition: transform 0.2s ease-out;
+    pointer-events: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* Loading */
+  .loading {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--cream-tertiary);
+    font-style: italic;
+  }
+  .loading-error {
+    background: var(--paper);
+    border: 1px solid rgba(200, 16, 46, 0.3);
+    border-radius: 6px;
+    padding: 16px;
+    color: var(--p0);
+    margin: 20px 0;
+  }
+  .loading-error code {
+    background: rgba(28, 26, 20, 0.06);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 12px;
+  }
+
+  /* Footer */
+  footer {
+    margin-top: 30px;
+    padding-top: 16px;
+    border-top: 1px solid var(--masters-line);
+    color: var(--cream-tertiary);
+    font-size: 11px;
+    text-align: center;
+  }
+  footer code {
+    color: var(--accent-bright);
+    font-family: "SF Mono", Menlo, monospace;
+  }
+
+  @media (max-width: 1000px) {
+    .manager,
+    .new-task-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 640px) {
+    body {
+      padding: 14px;
+    }
+    header {
+      align-items: center;
+    }
+    h1 {
+      font-size: 22px;
+    }
+    .subtitle {
+      display: none;
+    }
+    .stats {
+      grid-template-columns: repeat(5, minmax(54px, 1fr));
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    .stat {
+      min-width: 54px;
+      padding: 7px 8px;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .stat-num {
+      font-size: 18px;
+    }
+    .stat-label {
+      font-size: 9px;
+    }
+    .task-header {
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    .task-title {
+      flex-basis: 100%;
+    }
+    .task-detail {
+      padding-left: 16px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="page-heading">
+    <h1>Task Viewer</h1>
+    <div class="subtitle">需求收集 · 结构化任务 · Codex / Claude 提示词 · 执行结果回填</div>
+  </div>
+  <button class="action-btn new-task" id="btn-new-task">+ New task</button>
+</header>
+
+<div id="loading" class="loading">加载 tasks.json...</div>
+<div id="content" style="display: none;">
+
+  <div id="current-pin"></div>
+
+  <div class="stats">
+    <div class="stat open"><div class="stat-num" id="stat-open">0</div><div class="stat-label">Open</div></div>
+    <div class="stat in-progress"><div class="stat-num" id="stat-progress">0</div><div class="stat-label">In Progress</div></div>
+    <div class="stat done"><div class="stat-num" id="stat-done">0</div><div class="stat-label">Done</div></div>
+    <div class="stat skipped"><div class="stat-num" id="stat-skipped">0</div><div class="stat-label">Skipped</div></div>
+    <div class="stat p0"><div class="stat-num" id="stat-p0">0</div><div class="stat-label">P0 Open</div></div>
+  </div>
+
+  <div class="progress-wrapper">
+    <div class="progress-bar">
+      <div class="progress-done" id="bar-done"></div>
+      <div class="progress-skipped" id="bar-skipped"></div>
+    </div>
+  </div>
+
+  <div class="manager">
+    <section class="manager-panel">
+      <div class="manager-title">执行结果回填</div>
+      <div class="manager-copy">粘贴 Codex / Claude 输出的结构化结果,写入 implementation_runs。</div>
+      <textarea class="manager-field" id="run-json" placeholder='{"task_id":"SBS_009","status":"done","commit":"...","summary":"..."}'></textarea>
+      <div class="manager-actions">
+        <button class="action-btn primary" id="btn-apply-run">回填执行结果</button>
+        <button class="action-btn" id="btn-run-template">复制结果模板</button>
+      </div>
+      <textarea class="manager-field manager-output short" id="run-result" readonly placeholder="回填结果"></textarea>
+    </section>
+  </div>
+
+  <div class="filters">
+    <div class="filter-group">
+      <span class="filter-group-label">优先级</span>
+      <button class="chip" data-priority="all">全部</button>
+      <button class="chip p0" data-priority="P0">P0</button>
+      <button class="chip p1" data-priority="P1">P1</button>
+      <button class="chip p2" data-priority="P2">P2</button>
+    </div>
+    <div class="filter-group">
+      <span class="filter-group-label">状态</span>
+      <button class="chip active" data-status="all">全部</button>
+      <button class="chip" data-status="open">Open</button>
+      <button class="chip" data-status="done">Done</button>
+      <button class="chip" data-status="skipped">Skipped</button>
+    </div>
+    <input type="text" class="search-bar" id="search" placeholder="搜 task ID / 标题 / 描述...">
+  </div>
+
+  <div class="actions-row">
+    <button class="action-btn primary" id="btn-export">导出当前状态为 JSON</button>
+    <button class="action-btn" id="btn-generate-dev-prompt">生成选中任务开发提示词</button>
+    <button class="action-btn" id="btn-reset-all">清除所有状态</button>
+    <button class="action-btn" id="btn-collapse-all">全部折叠</button>
+  </div>
+
+  <div class="selection-bar">
+    <span class="selection-count" id="selection-count">已选 0 个任务</span>
+    <button class="action-btn" id="btn-select-visible">选择当前筛选</button>
+    <button class="action-btn" id="btn-clear-selection">清空选择</button>
+  </div>
+  <div class="field-shell">
+    <textarea class="manager-field manager-output" id="dev-prompt-output" placeholder="选中任务后点击生成,这里会出现给 Codex / Claude 的开发提示词"></textarea>
+    <button class="field-copy-btn" data-copy-target="dev-prompt-output" title="复制" aria-label="复制开发提示词">⧉</button>
+  </div>
+
+  <div id="task-list"></div>
+
+</div>
+
+<div class="task-modal" id="new-task-modal" aria-hidden="true">
+  <div class="modal-backdrop" id="new-task-backdrop"></div>
+  <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="new-task-title">
+    <div class="modal-header">
+      <div>
+        <div class="modal-kicker">New task</div>
+        <div class="modal-title" id="new-task-title">需求收集箱</div>
+        <div class="manager-copy">先把口水话需求转成结构化任务提示词,再把 AI 返回的 JSON 导入任务库。</div>
+      </div>
+      <button class="modal-close" id="btn-close-new-task" title="关闭">×</button>
+    </div>
+    <div class="new-task-grid">
+      <section class="manager-panel">
+        <div class="manager-title">自然语言输入</div>
+        <div class="manager-copy">写入口水话需求,生成给 AI 的结构化任务 JSON 提示词。</div>
+        <div class="manager-select-row">
+          <select class="manager-select" id="intake-category">
+            <option value="MATCH_LIST">球局列表</option>
+            <option value="MULTI_SCORE">多人记分</option>
+            <option value="SCORECARD">计分卡详情</option>
+            <option value="SBS">逐杆记录</option>
+            <option value="MAP">卫星地图</option>
+            <option value="GLOBAL">全局体验</option>
+          </select>
+          <select class="manager-select" id="intake-type">
+            <option value="bug">bug</option>
+            <option value="design">design</option>
+            <option value="improvement">improvement</option>
+            <option value="feature">feature</option>
+            <option value="refactor">refactor</option>
+          </select>
+        </div>
+        <textarea class="manager-field" id="intake-text" placeholder="把想到的问题、需求、现象、期望用自然语言写在这里..."></textarea>
+        <div class="manager-actions">
+          <button class="action-btn primary" id="btn-generate-structure-prompt">生成结构化任务提示词</button>
+        </div>
+        <div class="field-shell">
+          <textarea class="manager-field manager-output" id="structure-prompt-output" placeholder="这里会生成给 AI 的提示词"></textarea>
+          <button class="field-copy-btn" data-copy-target="structure-prompt-output" title="复制" aria-label="复制结构化任务提示词">⧉</button>
+        </div>
+      </section>
+
+      <section class="manager-panel">
+        <div class="manager-title">AI JSON 导入</div>
+        <div class="manager-copy">粘贴 AI 生成的单个 task JSON 或 tasks 数组。无 ID 时会按分类补号。</div>
+        <textarea class="manager-field" id="import-json" placeholder='{"title":"...","type":"bug","priority":"P1",...}'></textarea>
+        <div class="manager-actions">
+          <button class="action-btn primary" id="btn-import-task">导入到当前列表</button>
+          <button class="action-btn" id="btn-validate-task">校验 JSON</button>
+        </div>
+        <textarea class="manager-field manager-output" id="import-result" readonly placeholder="导入/校验结果"></textarea>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer>
+  状态存于 localStorage · 修改 tasks.json 后刷新页面同步 · 配套 <code>DESIGN_TOKENS_GUIDE.md</code>
+</footer>
+
+<script>
+// ============================================================
+// State
+// ============================================================
+const STORAGE_KEY = 'golfhub-task-viewer-state';
+let tasksData = null;
+let state = {
+  status: {},        // { taskId: 'open' | 'done' | 'skipped' }, only overrides base JSON
+  current: null,     // current pinned task ID
+  expanded: {},      // { taskId: true } for expanded cards
+  selected: {},      // { taskId: true } for prompt generation
+  filter: { priority: 'all', status: 'all', search: '' }
+};
+
+function loadState() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) state = { ...state, ...JSON.parse(stored) };
+  } catch (e) {}
+}
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    status: state.status,
+    current: state.current,
+    expanded: state.expanded,
+    selected: state.selected
+  }));
+}
+
+// ============================================================
+// Load tasks.json
+// ============================================================
+async function loadTasks() {
+  try {
+    const res = await fetch('tasks.json');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    tasksData = await res.json();
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+    loadState();
+    render();
+  } catch (e) {
+    document.getElementById('loading').innerHTML = `
+      <div class="loading-error">
+        <strong>无法加载 tasks.json</strong><br><br>
+        本页面需要从同目录加载 <code>tasks.json</code>。<br>
+        如果直接双击打开 HTML(<code>file://</code>),浏览器会因 CORS 拒绝读取。<br><br>
+        <strong>解决方法</strong>:在该文件目录下跑一个本地 HTTP 服务,然后访问 <code>http://localhost:8000/task-viewer.html</code>:<br><br>
+        <code>cd .codex && python3 -m http.server 8000</code><br><br>
+        或者直接把 tasks.json 内容粘到下方的"手动加载"区:<br>
+        <textarea id="manual-json" rows="6" style="width: 100%; margin-top: 10px; font-family: 'SF Mono', monospace; font-size: 11px;" placeholder='粘贴 tasks.json 内容...'></textarea>
+        <button id="btn-manual" style="margin-top: 8px; padding: 6px 14px; background: var(--ink); color: var(--bg-alt); border: none; border-radius: 4px; cursor: pointer;">加载</button>
+      </div>
+    `;
+    document.getElementById('btn-manual')?.addEventListener('click', () => {
+      try {
+        const json = document.getElementById('manual-json').value;
+        tasksData = JSON.parse(json);
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+        loadState();
+        render();
+      } catch (err) {
+        alert('JSON 格式错误: ' + err.message);
+      }
+    });
+  }
+}
+
+// ============================================================
+// Categorize tasks
+// ============================================================
+function getTasks() {
+  if (!tasksData || !tasksData.tasks) return [];
+  return tasksData.tasks;
+}
+
+function getTask(taskId) {
+  return getTasks().find(t => t.id === taskId);
+}
+
+function categoryFromId(id) {
+  if (id.startsWith('MATCH_LIST')) return '球局列表页';
+  if (id.startsWith('MULTI_SCORE')) return '多人记分页';
+  if (id.startsWith('SCORECARD')) return '计分卡详情页';
+  if (id.startsWith('SBS')) return '逐杆记录(SBS)';
+  if (id.startsWith('MAP')) return '卫星地图';
+  if (id.startsWith('GLOBAL')) return '视觉与全局体验';
+  return '其他';
+}
+
+function prefixFromCategory(category) {
+  const map = {
+    MATCH_LIST: 'MATCH_LIST',
+    MULTI_SCORE: 'MULTI_SCORE',
+    SCORECARD: 'SCORECARD',
+    SBS: 'SBS',
+    MAP: 'MAP',
+    GLOBAL: 'GLOBAL'
+  };
+  return map[category] || 'GLOBAL';
+}
+
+const CATEGORY_ORDER = [
+  '球局列表页',
+  '多人记分页',
+  '计分卡详情页',
+  '逐杆记录(SBS)',
+  '卫星地图',
+  '视觉与全局体验',
+  '其他'
+];
+
+// ============================================================
+// Status helpers
+// ============================================================
+function getStatus(taskId) {
+  if (Object.prototype.hasOwnProperty.call(state.status, taskId)) {
+    return state.status[taskId];
+  }
+  return getTask(taskId)?.status || 'open';
+}
+function setStatus(taskId, status) {
+  const base = getTask(taskId)?.status || 'open';
+  if (status === base) {
+    delete state.status[taskId];
+  } else {
+    state.status[taskId] = status;
+  }
+  saveState();
+  render();
+}
+
+// ============================================================
+// Render
+// ============================================================
+function render() {
+  renderCurrentPin();
+  renderStats();
+  renderFilters();
+  renderSelection();
+  renderTasks();
+}
+
+function renderCurrentPin() {
+  const pin = document.getElementById('current-pin');
+  const tasks = getTasks();
+  const current = tasks.find(t => t.id === state.current);
+
+  if (!current) {
+    pin.className = '';
+    pin.style.display = 'none';
+    pin.innerHTML = '';
+    return;
+  }
+
+  const status = getStatus(current.id);
+  pin.style.display = 'block';
+  pin.className = 'current-pin';
+  pin.innerHTML = `
+    <div class="pin-label">当前任务 · ${status === 'open' ? '进行中' : status}</div>
+    <div class="pin-task-id">${current.id} · ${current.priority || ''} · ${current.type || ''}</div>
+    <div class="pin-title">${current.title || ''}</div>
+    <div class="pin-actions">
+      <button class="pin-btn" onclick="copyText('${current.id}')">复制 ID</button>
+      <button class="pin-btn" onclick="scrollToTask('${current.id}')">滚动到</button>
+      <button class="pin-btn" onclick="markCurrentDone()">✅ 标记完成</button>
+      <button class="pin-btn" onclick="unpinCurrent()">取消钉选</button>
+    </div>
+  `;
+}
+
+function renderStats() {
+  const tasks = getTasks();
+  const counts = { open: 0, done: 0, skipped: 0, p0Open: 0 };
+  tasks.forEach(t => {
+    const s = getStatus(t.id);
+    counts[s]++;
+    if (s === 'open' && t.priority === 'P0') counts.p0Open++;
+  });
+  document.getElementById('stat-open').textContent = counts.open;
+  document.getElementById('stat-progress').textContent = state.current ? 1 : 0;
+  document.getElementById('stat-done').textContent = counts.done;
+  document.getElementById('stat-skipped').textContent = counts.skipped;
+  document.getElementById('stat-p0').textContent = counts.p0Open;
+
+  const total = tasks.length;
+  document.getElementById('bar-done').style.width = (counts.done / total * 100) + '%';
+  document.getElementById('bar-skipped').style.width = (counts.skipped / total * 100) + '%';
+}
+
+function renderFilters() {
+  document.querySelectorAll('[data-priority]').forEach(b => {
+    b.classList.toggle('active', b.dataset.priority === state.filter.priority);
+  });
+  document.querySelectorAll('[data-status]').forEach(b => {
+    b.classList.toggle('active', b.dataset.status === state.filter.status);
+  });
+}
+
+function renderSelection() {
+  const ids = selectedTaskIds();
+  document.getElementById('selection-count').textContent = `已选 ${ids.length} 个任务`;
+}
+
+function matchesFilter(task) {
+  const p = state.filter.priority;
+  const s = state.filter.status;
+  const q = state.filter.search.toLowerCase().trim();
+  const taskStatus = getStatus(task.id);
+
+  if (p !== 'all' && task.priority !== p) return false;
+  if (s !== 'all' && taskStatus !== s) return false;
+  if (q) {
+    const text = `${task.id} ${task.title || ''} ${task.problem || ''} ${task.expected || ''}`.toLowerCase();
+    if (!text.includes(q)) return false;
+  }
+  return true;
+}
+
+function renderTasks() {
+  const list = document.getElementById('task-list');
+  const tasks = getTasks();
+  const grouped = {};
+  tasks.forEach(t => {
+    const cat = categoryFromId(t.id);
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(t);
+  });
+
+  list.innerHTML = '';
+  CATEGORY_ORDER.forEach(cat => {
+    const items = (grouped[cat] || []).filter(matchesFilter);
+    if (items.length === 0) return;
+
+    const allInCat = grouped[cat] || [];
+    const doneInCat = allInCat.filter(t => getStatus(t.id) === 'done').length;
+
+    const catEl = document.createElement('div');
+    catEl.className = 'category';
+    catEl.innerHTML = `
+      <div class="category-header">
+        <span>${cat}</span>
+        <span class="category-count">${doneInCat}/${allInCat.length}</span>
+      </div>
+    `;
+    items.forEach(t => catEl.appendChild(makeTaskCard(t)));
+    list.appendChild(catEl);
+  });
+
+  if (list.children.length === 0) {
+    list.innerHTML = '<div class="loading">没有匹配的任务</div>';
+  }
+}
+
+function makeTaskCard(task) {
+  const status = getStatus(task.id);
+  const isCurrent = state.current === task.id;
+  const isExpanded = state.expanded[task.id];
+  const isSelected = !!state.selected[task.id];
+  const runs = Array.isArray(task.implementation_runs) ? task.implementation_runs : [];
+
+  const card = document.createElement('div');
+  card.className = 'task ' + status + (isCurrent ? ' current' : '') + (isExpanded ? ' expanded' : '');
+  card.id = 'task-' + task.id;
+
+  const statusIcon = status === 'done' ? '✓' : status === 'skipped' ? '⏭' : isCurrent ? '★' : '';
+
+  card.innerHTML = `
+    <div class="task-header">
+      <input class="task-select" type="checkbox" data-action="select" data-id="${task.id}" ${isSelected ? 'checked' : ''} title="选择用于生成提示词">
+      <div class="task-status-icon">${statusIcon}</div>
+      <span class="task-priority ${(task.priority || 'P2').toLowerCase()}">${task.priority || ''}</span>
+      <span class="task-id">${task.id}</span>
+      <span class="task-title">${task.title || '(无标题)'}</span>
+      <span class="task-toggle">▶</span>
+    </div>
+    <div class="task-detail">
+      ${task.problem ? `<div class="detail-section"><div class="detail-label">Problem</div><div class="detail-content">${task.problem}</div></div>` : ''}
+      ${task.expected ? `<div class="detail-section"><div class="detail-label">Expected</div><div class="detail-content">${task.expected}</div></div>` : ''}
+      ${task.constraints && task.constraints.length ? `<div class="detail-section"><div class="detail-label">Constraints</div><div class="detail-content"><ul>${task.constraints.map(c => '<li>' + c + '</li>').join('')}</ul></div></div>` : ''}
+      ${task.scope && task.scope.allowed_paths_hint && task.scope.allowed_paths_hint.length ? `<div class="detail-section"><div class="detail-label">Scope Hint</div><div class="detail-content">${task.scope.allowed_paths_hint.map(p => '<code>' + p + '</code>').join(' · ')}</div></div>` : ''}
+      ${task.anchors && task.anchors.search_hints && task.anchors.search_hints.length ? `<div class="detail-section"><div class="detail-label">Search Hints</div><div class="detail-content">${task.anchors.search_hints.map(p => '<code>' + p + '</code>').join(' · ')}</div></div>` : ''}
+      ${task.depends_on && task.depends_on.length ? `<div class="detail-section"><div class="detail-label">Depends On</div><div class="detail-content">${task.depends_on.map(p => '<span class="task-tag">' + p + '</span>').join('')}</div></div>` : ''}
+      ${task.blocks && task.blocks.length ? `<div class="detail-section"><div class="detail-label">Blocks</div><div class="detail-content">${task.blocks.map(p => '<span class="task-tag">' + p + '</span>').join('')}</div></div>` : ''}
+      ${runs.length ? `<div class="detail-section"><div class="detail-label">Implementation Runs</div><div class="detail-content">${runs.map(runSummaryHTML).join('')}</div></div>` : ''}
+      <div class="task-actions">
+        <button class="task-action-btn done-btn" data-action="done" data-id="${task.id}">${status === 'done' ? '✓ 已完成' : '✅ 标记完成'}</button>
+        <button class="task-action-btn skip-btn" data-action="skipped" data-id="${task.id}">${status === 'skipped' ? '⏭ 已跳过' : '⏭️ 跳过/已修复'}</button>
+        <button class="task-action-btn pin-btn ${isCurrent ? 'active' : ''}" data-action="pin" data-id="${task.id}">${isCurrent ? '📌 已钉选' : '📌 钉为当前'}</button>
+        ${status !== 'open' ? `<button class="task-action-btn reset-btn" data-action="reset" data-id="${task.id}">🔄 重置</button>` : ''}
+        <button class="task-action-btn" data-action="copy" data-id="${task.id}">复制 ID</button>
+      </div>
+    </div>
+  `;
+
+  // Header click: toggle expand
+  card.querySelector('.task-header').addEventListener('click', () => {
+    state.expanded[task.id] = !state.expanded[task.id];
+    saveState();
+    render();
+  });
+
+  // Action buttons
+  card.querySelectorAll('[data-action]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const action = btn.dataset.action;
+      const id = btn.dataset.id;
+      handleAction(action, id);
+    });
+  });
+
+  return card;
+}
+
+function handleAction(action, id) {
+  if (action === 'done' || action === 'skipped') {
+    const current = getStatus(id);
+    setStatus(id, current === action ? 'open' : action);
+    if (state.current === id && action !== 'open') {
+      state.current = null;
+      saveState();
+    }
+  } else if (action === 'reset') {
+    setStatus(id, 'open');
+  } else if (action === 'pin') {
+    state.current = state.current === id ? null : id;
+    saveState();
+    render();
+  } else if (action === 'copy') {
+    copyText(id);
+  } else if (action === 'select') {
+    state.selected[id] = !state.selected[id];
+    if (!state.selected[id]) delete state.selected[id];
+    saveState();
+    renderSelection();
+  }
+}
+
+function selectedTaskIds() {
+  return Object.keys(state.selected).filter(id => getTask(id));
+}
+
+function selectedTasks() {
+  return selectedTaskIds().map(getTask).filter(Boolean);
+}
+
+function visibleTasks() {
+  return getTasks().filter(matchesFilter);
+}
+
+function nextTaskId(prefix) {
+  const re = new RegExp('^' + prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '_(\\d+)$');
+  const max = getTasks().reduce((m, t) => {
+    const match = String(t.id || '').match(re);
+    return match ? Math.max(m, Number(match[1])) : m;
+  }, 0);
+  return `${prefix}_${String(max + 1).padStart(3, '0')}`;
+}
+
+function parseJSONLoose(text) {
+  const trimmed = text.trim();
+  if (!trimmed) throw new Error('内容为空');
+  try {
+    return JSON.parse(trimmed);
+  } catch (firstError) {
+    const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    if (fenced) return JSON.parse(fenced[1]);
+    const start = trimmed.indexOf('{');
+    const end = trimmed.lastIndexOf('}');
+    if (start >= 0 && end > start) return JSON.parse(trimmed.slice(start, end + 1));
+    throw firstError;
+  }
+}
+
+function normalizeImportedTask(raw, preferredPrefix) {
+  const task = raw.task ? raw.task : raw;
+  if (!task || typeof task !== 'object' || Array.isArray(task)) {
+    throw new Error('task 必须是对象');
+  }
+  if (!task.title) throw new Error('缺少 title');
+  const prefix = prefixFromCategory(task.category || task.area || preferredPrefix);
+  const id = task.id || nextTaskId(prefix);
+  return {
+    id,
+    title: task.title,
+    type: task.type || 'improvement',
+    priority: task.priority || 'P2',
+    status: task.status || 'open',
+    depends_on: task.depends_on || [],
+    blocks: task.blocks || [],
+    scope: task.scope || { allowed_paths_hint: [] },
+    anchors: task.anchors || { search_hints: [] },
+    problem: task.problem || task.description || '',
+    expected: task.expected || '',
+    constraints: task.constraints || [],
+    acceptance: task.acceptance || { manual_checks: [] },
+    done_definition: task.done_definition || [],
+    tracking: task.tracking || {
+      branch: `${task.type || 'feat'}/${id}-${slugify(task.title)}`,
+      commit_prefix: `${task.type || 'feat'}(${prefix.toLowerCase().replaceAll('_', '-')})`,
+      pr_title: `[${id}] ${task.title}`
+    },
+    raw_inputs: task.raw_inputs || [],
+    implementation_runs: task.implementation_runs || []
+  };
+}
+
+function formatTaskListValue(value, fallback = '无') {
+  if (!value) return fallback;
+  if (Array.isArray(value)) {
+    if (!value.length) return fallback;
+    return value.map(item => `- ${typeof item === 'string' ? item : JSON.stringify(item)}`).join('\n');
+  }
+  return String(value);
+}
+
+function formatImportedTaskSummary(task) {
+  const scope = task.scope || {};
+  const anchors = task.anchors || {};
+  const acceptance = task.acceptance || {};
+  return [
+    `${task.id} · ${task.title}`,
+    `类型: ${task.type || 'improvement'}    优先级: ${task.priority || 'P2'}    状态: ${task.status || 'open'}`,
+    '',
+    '问题 / 需求理解:',
+    task.problem || '无',
+    '',
+    '期望结果:',
+    task.expected || '无',
+    '',
+    '约束:',
+    formatTaskListValue(task.constraints),
+    '',
+    '影响范围:',
+    formatTaskListValue(scope.allowed_paths_hint),
+    '',
+    '搜索线索:',
+    formatTaskListValue(anchors.search_hints),
+    '',
+    '验收项:',
+    formatTaskListValue(acceptance.manual_checks || acceptance.unit_tests || acceptance.ui_tests),
+    '',
+    '完成定义:',
+    formatTaskListValue(task.done_definition)
+  ].join('\n');
+}
+
+function formatImportedTasksSummary(tasks) {
+  return [
+    `已导入 ${tasks.length} 个 task`,
+    '导入后的结构化信息如下。请确认无误后导出 tasks.json 持久化。',
+    '',
+    tasks.map(formatImportedTaskSummary).join('\n\n' + '-'.repeat(48) + '\n\n')
+  ].join('\n');
+}
+
+function slugify(text) {
+  return String(text || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\u4e00-\u9fa5]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48) || 'task';
+}
+
+function escapeHTML(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function runSummaryHTML(run) {
+  const status = run.status || 'unknown';
+  const commit = run.commit ? ` · ${run.commit}` : '';
+  const when = run.completed_at || run.at || '';
+  return `
+    <div class="implementation-run">
+      <strong>${escapeHTML(status)}</strong>${escapeHTML(commit)}
+      ${when ? `<span> · ${escapeHTML(when)}</span>` : ''}<br>
+      ${escapeHTML(run.summary || '')}
+    </div>
+  `;
+}
+
+function buildStructurePrompt() {
+  const raw = document.getElementById('intake-text').value.trim();
+  const category = document.getElementById('intake-category').value;
+  const type = document.getElementById('intake-type').value;
+  if (!raw) {
+    showToast('先填写自然语言需求');
+    return '';
+  }
+  const prefix = prefixFromCategory(category);
+  return `你是 GolfHub Score 项目的产品/工程任务分析助手。请把下面的自然语言需求转成一个可导入 .codex/tasks.json 的结构化 task JSON。
+
+项目背景:
+- iOS App: SwiftUI + SwiftData + ARKit/Metal
+- 架构原则: UI 由状态驱动,业务逻辑不要写在 View 里,服务可注入可测试
+- 任务 ID 前缀建议: ${prefix}
+- 类型建议: ${type}
+
+请输出且只输出一个 JSON 对象,不要 markdown,不要解释。字段必须符合:
+{
+  "title": "短标题",
+  "type": "bug|feature|design|improvement|refactor|perf|test|docs",
+  "priority": "P0|P1|P2|P3",
+  "status": "open",
+  "scope": {
+    "allowed_paths_hint": ["可能涉及的模块/路径"],
+    "forbidden_paths_hint": ["不应触碰的模块/路径"]
+  },
+  "anchors": {
+    "primary_files": [],
+    "primary_symbols": [],
+    "search_hints": ["用于 rg 搜索的关键词"]
+  },
+  "problem": "对问题/需求的深层理解",
+  "expected": "完成后的明确期望",
+  "constraints": ["边界条件和禁止事项"],
+  "acceptance": {
+    "unit_tests": [{"name": "test...", "assertion": "..."}],
+    "ui_tests": [{"name": "test...", "assertion": "..."}],
+    "manual_checks": ["人工验收项"]
+  },
+  "done_definition": ["完成定义"],
+  "tracking": {
+    "branch": "${type}/${prefix}_XXX-kebab-summary",
+    "commit_prefix": "${type}(${prefix.toLowerCase().replaceAll('_', '-')})",
+    "pr_title": "[${prefix}_XXX] 标题"
+  },
+  "raw_inputs": [{"source": "user_natural_language", "text": ${JSON.stringify(raw)}}],
+  "implementation_runs": []
+}
+
+自然语言需求:
+${raw}`;
+}
+
+function taskPromptBlock(task) {
+  return `## ${task.id} · ${task.title}
+Type: ${task.type || 'unknown'}
+Priority: ${task.priority || 'P2'}
+Status: ${getStatus(task.id)}
+
+Problem:
+${task.problem || ''}
+
+Expected:
+${task.expected || ''}
+
+Constraints:
+${(task.constraints || []).map(c => `- ${c}`).join('\n') || '- 无'}
+
+Scope Hint:
+${((task.scope || {}).allowed_paths_hint || []).map(p => `- ${p}`).join('\n') || '- 需要先定位'}
+
+Search Hints:
+${((task.anchors || {}).search_hints || []).map(p => `- ${p}`).join('\n') || '- 无'}
+
+Acceptance:
+${JSON.stringify(task.acceptance || {}, null, 2)}
+
+Done Definition:
+${(task.done_definition || []).map(d => `- ${d}`).join('\n') || '- 完成后说明验证结果'}`;
+}
+
+function buildDevPrompt(tasks) {
+  if (!tasks.length) {
+    showToast('先选择至少 1 个任务');
+    return '';
+  }
+  return `你现在在 GolfHub Score 仓库中执行以下任务。请先阅读相关代码并做简短自检:
+1. Impact analysis: 会触碰哪些模块,是否引入新耦合
+2. Architecture consistency: 是否符合 UI 由 State 驱动、业务逻辑不写进 View、服务可注入可测试
+3. Testability: 如何验证,是否需要补 debug 信息
+
+执行要求:
+- 只实现下列任务,不要顺手重构无关代码
+- 优先用 rg 搜索 Search Hints
+- 修改完成后运行可行的验证,至少说明未能验证的原因
+- 完成后请在最终回复末尾输出一个可复制的 JSON 代码块,用于回填任务系统,格式如下:
+{
+  "task_id": "TASK_ID 或多个用数组 task_ids",
+  "status": "done|blocked|needs_followup",
+  "commit": "如已提交则填写 SHA,否则为空",
+  "summary": "实现摘要",
+  "changed_files": ["相对路径"],
+  "verification": ["执行过的验证命令和结果"],
+  "followups": ["需要继续跟踪的事项"]
+}
+
+任务列表:
+
+${tasks.map(taskPromptBlock).join('\n\n---\n\n')}`;
+}
+
+window.copyText = function(text) {
+  navigator.clipboard.writeText(text).then(() => showToast('已复制'));
+};
+
+function copyFromElement(id) {
+  const el = document.getElementById(id);
+  if (!el || !el.value) {
+    showToast('没有可复制内容');
+    return;
+  }
+  copyText(el.value);
+}
+
+function openNewTaskModal() {
+  const modal = document.getElementById('new-task-modal');
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+  document.getElementById('intake-text').focus();
+}
+
+function closeNewTaskModal() {
+  const modal = document.getElementById('new-task-modal');
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+}
+
+window.scrollToTask = function(id) {
+  const el = document.getElementById('task-' + id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+};
+
+window.markCurrentDone = function() {
+  if (state.current) {
+    const id = state.current;
+    setStatus(id, 'done');
+    state.current = null;
+    saveState();
+    render();
+    showToast('✅ ' + id + ' 已标记完成');
+  }
+};
+
+window.unpinCurrent = function() {
+  state.current = null;
+  saveState();
+  render();
+};
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ============================================================
+// Filter handlers
+// ============================================================
+document.querySelectorAll('[data-priority]').forEach(b => {
+  b.addEventListener('click', () => {
+    state.filter.priority = b.dataset.priority;
+    render();
+  });
+});
+document.querySelectorAll('[data-status]').forEach(b => {
+  b.addEventListener('click', () => {
+    state.filter.status = b.dataset.status;
+    render();
+  });
+});
+document.getElementById('search').addEventListener('input', e => {
+  state.filter.search = e.target.value;
+  renderTasks();
+});
+
+document.getElementById('btn-new-task').addEventListener('click', openNewTaskModal);
+document.getElementById('btn-close-new-task').addEventListener('click', closeNewTaskModal);
+document.getElementById('new-task-backdrop').addEventListener('click', closeNewTaskModal);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeNewTaskModal();
+});
+
+// ============================================================
+// Manager actions
+// ============================================================
+document.querySelectorAll('[data-copy-target]').forEach(btn => {
+  btn.addEventListener('click', () => copyFromElement(btn.dataset.copyTarget));
+});
+
+document.getElementById('btn-generate-structure-prompt').addEventListener('click', () => {
+  const prompt = buildStructurePrompt();
+  if (!prompt) return;
+  document.getElementById('structure-prompt-output').value = prompt;
+  showToast('已生成结构化任务提示词');
+});
+
+document.getElementById('btn-validate-task').addEventListener('click', () => {
+  try {
+    const value = parseJSONLoose(document.getElementById('import-json').value);
+    const list = Array.isArray(value) ? value : value.tasks || [value];
+    document.getElementById('import-result').value = `JSON 有效,检测到 ${list.length} 个 task 候选`;
+  } catch (e) {
+    document.getElementById('import-result').value = 'JSON 无效: ' + e.message;
+  }
+});
+
+document.getElementById('btn-import-task').addEventListener('click', () => {
+  try {
+    const value = parseJSONLoose(document.getElementById('import-json').value);
+    const rawList = Array.isArray(value) ? value : value.tasks || [value];
+    const preferredPrefix = document.getElementById('intake-category').value;
+    const imported = rawList.map(raw => normalizeImportedTask(raw, preferredPrefix));
+    const existingIds = new Set(getTasks().map(t => t.id));
+    imported.forEach(task => {
+      if (existingIds.has(task.id)) {
+        task.id = nextTaskId(task.id.split('_').slice(0, -1).join('_') || preferredPrefix);
+      }
+      tasksData.tasks.push(task);
+      existingIds.add(task.id);
+      state.expanded[task.id] = true;
+      state.selected[task.id] = true;
+    });
+    saveState();
+    render();
+    document.getElementById('import-result').value = formatImportedTasksSummary(imported);
+    showToast('已导入,记得导出 tasks.json 持久化');
+  } catch (e) {
+    document.getElementById('import-result').value = '导入失败: ' + e.message;
+  }
+});
+
+document.getElementById('btn-generate-dev-prompt').addEventListener('click', () => {
+  const prompt = buildDevPrompt(selectedTasks());
+  if (!prompt) return;
+  document.getElementById('dev-prompt-output').value = prompt;
+  showToast('已生成开发提示词');
+});
+
+document.getElementById('btn-select-visible').addEventListener('click', () => {
+  visibleTasks().forEach(task => { state.selected[task.id] = true; });
+  saveState();
+  render();
+});
+
+document.getElementById('btn-clear-selection').addEventListener('click', () => {
+  state.selected = {};
+  saveState();
+  render();
+});
+
+document.getElementById('btn-run-template').addEventListener('click', () => {
+  const id = selectedTaskIds()[0] || state.current || 'TASK_ID';
+  const template = {
+    task_id: id,
+    status: 'done',
+    commit: '',
+    summary: '',
+    changed_files: [],
+    verification: [],
+    followups: []
+  };
+  document.getElementById('run-json').value = JSON.stringify(template, null, 2);
+  copyText(JSON.stringify(template, null, 2));
+});
+
+document.getElementById('btn-apply-run').addEventListener('click', () => {
+  try {
+    const run = parseJSONLoose(document.getElementById('run-json').value);
+    const ids = run.task_ids || (run.task_id ? [run.task_id] : []);
+    if (!ids.length) throw new Error('缺少 task_id 或 task_ids');
+    const now = new Date().toISOString();
+    const updated = [];
+    ids.forEach(id => {
+      const task = getTask(id);
+      if (!task) throw new Error('找不到任务: ' + id);
+      if (!Array.isArray(task.implementation_runs)) task.implementation_runs = [];
+      task.implementation_runs.push({
+        agent: run.agent || 'codex',
+        status: run.status || 'done',
+        commit: run.commit || '',
+        summary: run.summary || '',
+        changed_files: run.changed_files || [],
+        verification: run.verification || [],
+        followups: run.followups || [],
+        completed_at: run.completed_at || now
+      });
+      if (['done', 'skipped', 'open'].includes(run.status)) {
+        setStatus(id, run.status);
+      }
+      updated.push(id);
+    });
+    render();
+    document.getElementById('run-result').value = `已回填: ${updated.join(', ')}。记得导出 tasks.json 持久化。`;
+    showToast('执行结果已回填');
+  } catch (e) {
+    document.getElementById('run-result').value = '回填失败: ' + e.message;
+  }
+});
+
+// ============================================================
+// Top actions
+// ============================================================
+document.getElementById('btn-export').addEventListener('click', () => {
+  const tasks = getTasks();
+  const merged = {
+    ...tasksData,
+    tasks: tasks.map(t => ({
+      ...t,
+      status: getStatus(t.id)
+    }))
+  };
+  const blob = new Blob([JSON.stringify(merged, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'tasks.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('已下载 tasks.json,覆盖到 .codex/tasks.json 即可同步');
+});
+
+document.getElementById('btn-reset-all').addEventListener('click', () => {
+  if (confirm('清除所有 task 状态?(进度条会归零)')) {
+    state.status = {};
+    state.current = null;
+    state.expanded = {};
+    state.selected = {};
+    saveState();
+    render();
+    showToast('已重置所有状态');
+  }
+});
+
+document.getElementById('btn-collapse-all').addEventListener('click', () => {
+  state.expanded = {};
+  saveState();
+  render();
+});
+
+// ============================================================
+// Boot
+// ============================================================
+loadTasks();
+</script>
+
+</body>
+</html>
