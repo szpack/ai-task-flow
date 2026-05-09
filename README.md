@@ -7,6 +7,7 @@ AI Task Flow is a lightweight, local-first workflow tool for AI-assisted develop
 ## 功能
 
 - 从 `tasks.json` 加载结构化任务
+- 根据浏览器语言自动切换中英文界面，也可手动切换
 - 按优先级、状态和关键词筛选任务
 - 钉选当前任务，标记完成或跳过
 - 将自然语言需求转换为结构化任务 JSON 提示词

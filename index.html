@@ -65,6 +65,37 @@
   .page-heading {
     min-width: 0;
   }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .lang-switch {
+    display: flex;
+    gap: 4px;
+    padding: 2px;
+    background: var(--masters-card);
+    border: 1px solid rgba(245, 224, 143, 0.12);
+    border-radius: 999px;
+  }
+  .lang-btn {
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    opacity: 0.58;
+    transition: all 0.15s;
+  }
+  .lang-btn:hover,
+  .lang-btn.active {
+    opacity: 1;
+    background: rgba(241, 234, 208, 0.16);
+  }
   h1 {
     font-family: "Cormorant Garamond", "Source Han Serif SC", serif;
     font-size: 26px;
@@ -805,22 +836,28 @@
 <header>
   <div class="page-heading">
     <h1>AI Task Flow</h1>
-    <div class="subtitle">AI 任务流转台 · 需求结构化 · Codex / Claude 提示词 · 执行结果回填</div>
+    <div class="subtitle" data-i18n="subtitle">AI 任务流转台 · 需求结构化 · Codex / Claude 提示词 · 执行结果回填</div>
   </div>
-  <button class="action-btn new-task" id="btn-new-task">+ New task</button>
+  <div class="header-actions">
+    <div class="lang-switch" aria-label="Language">
+      <button class="lang-btn" data-lang="zh" title="中文" aria-label="中文">🇨🇳</button>
+      <button class="lang-btn" data-lang="en" title="English" aria-label="English">🇺🇸</button>
+    </div>
+    <button class="action-btn new-task" id="btn-new-task" data-i18n="newTaskButton">+ New task</button>
+  </div>
 </header>
 
-<div id="loading" class="loading">加载 tasks.json...</div>
+<div id="loading" class="loading" data-i18n="loading">加载 tasks.json...</div>
 <div id="content" style="display: none;">
 
   <div id="current-pin"></div>
 
   <div class="stats">
-    <div class="stat open"><div class="stat-num" id="stat-open">0</div><div class="stat-label">Open</div></div>
-    <div class="stat in-progress"><div class="stat-num" id="stat-progress">0</div><div class="stat-label">In Progress</div></div>
-    <div class="stat done"><div class="stat-num" id="stat-done">0</div><div class="stat-label">Done</div></div>
-    <div class="stat skipped"><div class="stat-num" id="stat-skipped">0</div><div class="stat-label">Skipped</div></div>
-    <div class="stat p0"><div class="stat-num" id="stat-p0">0</div><div class="stat-label">P0 Open</div></div>
+    <div class="stat open"><div class="stat-num" id="stat-open">0</div><div class="stat-label" data-i18n="statOpen">Open</div></div>
+    <div class="stat in-progress"><div class="stat-num" id="stat-progress">0</div><div class="stat-label" data-i18n="statCurrent">In Progress</div></div>
+    <div class="stat done"><div class="stat-num" id="stat-done">0</div><div class="stat-label" data-i18n="statDone">Done</div></div>
+    <div class="stat skipped"><div class="stat-num" id="stat-skipped">0</div><div class="stat-label" data-i18n="statSkipped">Skipped</div></div>
+    <div class="stat p0"><div class="stat-num" id="stat-p0">0</div><div class="stat-label" data-i18n="statP0Open">P0 Open</div></div>
   </div>
 
   <div class="progress-wrapper">
@@ -832,50 +869,50 @@
 
   <div class="manager">
     <section class="manager-panel">
-      <div class="manager-title">执行结果回填</div>
-      <div class="manager-copy">粘贴 Codex / Claude 输出的结构化结果,写入 implementation_runs。</div>
+      <div class="manager-title" data-i18n="runBackfillTitle">执行结果回填</div>
+      <div class="manager-copy" data-i18n="runBackfillCopy">粘贴 Codex / Claude 输出的结构化结果,写入 implementation_runs。</div>
       <textarea class="manager-field" id="run-json" placeholder='{"task_id":"PROMPT_001","status":"done","commit":"...","summary":"..."}'></textarea>
       <div class="manager-actions">
-        <button class="action-btn primary" id="btn-apply-run">回填执行结果</button>
-        <button class="action-btn" id="btn-run-template">复制结果模板</button>
+        <button class="action-btn primary" id="btn-apply-run" data-i18n="applyRun">回填执行结果</button>
+        <button class="action-btn" id="btn-run-template" data-i18n="copyRunTemplate">复制结果模板</button>
       </div>
-      <textarea class="manager-field manager-output short" id="run-result" readonly placeholder="回填结果"></textarea>
+      <textarea class="manager-field manager-output short" id="run-result" readonly data-i18n-placeholder="runResultPlaceholder" placeholder="回填结果"></textarea>
     </section>
   </div>
 
   <div class="filters">
     <div class="filter-group">
-      <span class="filter-group-label">优先级</span>
-      <button class="chip" data-priority="all">全部</button>
+      <span class="filter-group-label" data-i18n="priority">优先级</span>
+      <button class="chip" data-priority="all" data-i18n="all">全部</button>
       <button class="chip p0" data-priority="P0">P0</button>
       <button class="chip p1" data-priority="P1">P1</button>
       <button class="chip p2" data-priority="P2">P2</button>
     </div>
     <div class="filter-group">
-      <span class="filter-group-label">状态</span>
-      <button class="chip active" data-status="all">全部</button>
-      <button class="chip" data-status="open">Open</button>
-      <button class="chip" data-status="done">Done</button>
-      <button class="chip" data-status="skipped">Skipped</button>
+      <span class="filter-group-label" data-i18n="status">状态</span>
+      <button class="chip active" data-status="all" data-i18n="all">全部</button>
+      <button class="chip" data-status="open" data-i18n="open">Open</button>
+      <button class="chip" data-status="done" data-i18n="done">Done</button>
+      <button class="chip" data-status="skipped" data-i18n="skipped">Skipped</button>
     </div>
-    <input type="text" class="search-bar" id="search" placeholder="搜 task ID / 标题 / 描述...">
+    <input type="text" class="search-bar" id="search" data-i18n-placeholder="searchPlaceholder" placeholder="搜 task ID / 标题 / 描述...">
   </div>
 
   <div class="actions-row">
-    <button class="action-btn primary" id="btn-export">导出当前状态为 JSON</button>
-    <button class="action-btn" id="btn-generate-dev-prompt">生成选中任务开发提示词</button>
-    <button class="action-btn" id="btn-reset-all">清除所有状态</button>
-    <button class="action-btn" id="btn-collapse-all">全部折叠</button>
+    <button class="action-btn primary" id="btn-export" data-i18n="exportJson">导出当前状态为 JSON</button>
+    <button class="action-btn" id="btn-generate-dev-prompt" data-i18n="generateDevPrompt">生成选中任务开发提示词</button>
+    <button class="action-btn" id="btn-reset-all" data-i18n="resetAll">清除所有状态</button>
+    <button class="action-btn" id="btn-collapse-all" data-i18n="collapseAll">全部折叠</button>
   </div>
 
   <div class="selection-bar">
     <span class="selection-count" id="selection-count">已选 0 个任务</span>
-    <button class="action-btn" id="btn-select-visible">选择当前筛选</button>
-    <button class="action-btn" id="btn-clear-selection">清空选择</button>
+    <button class="action-btn" id="btn-select-visible" data-i18n="selectVisible">选择当前筛选</button>
+    <button class="action-btn" id="btn-clear-selection" data-i18n="clearSelection">清空选择</button>
   </div>
   <div class="field-shell">
-    <textarea class="manager-field manager-output" id="dev-prompt-output" placeholder="选中任务后点击生成,这里会出现给 Codex / Claude 的开发提示词"></textarea>
-    <button class="field-copy-btn" data-copy-target="dev-prompt-output" title="复制" aria-label="复制开发提示词">⧉</button>
+    <textarea class="manager-field manager-output" id="dev-prompt-output" data-i18n-placeholder="devPromptPlaceholder" placeholder="选中任务后点击生成,这里会出现给 Codex / Claude 的开发提示词"></textarea>
+    <button class="field-copy-btn" data-copy-target="dev-prompt-output" data-i18n-title="copy" data-i18n-aria="copyDevPrompt" title="复制" aria-label="复制开发提示词">⧉</button>
   </div>
 
   <div id="task-list"></div>
@@ -887,16 +924,16 @@
   <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="new-task-title">
     <div class="modal-header">
       <div>
-        <div class="modal-kicker">New task</div>
-        <div class="modal-title" id="new-task-title">需求收集箱</div>
-        <div class="manager-copy">先把口水话需求转成结构化任务提示词,再把 AI 返回的 JSON 导入任务库。</div>
+        <div class="modal-kicker" data-i18n="newTaskKicker">New task</div>
+        <div class="modal-title" id="new-task-title" data-i18n="newTaskTitle">需求收集箱</div>
+        <div class="manager-copy" data-i18n="newTaskCopy">先把口水话需求转成结构化任务提示词,再把 AI 返回的 JSON 导入任务库。</div>
       </div>
-      <button class="modal-close" id="btn-close-new-task" title="关闭">×</button>
+      <button class="modal-close" id="btn-close-new-task" data-i18n-title="close" title="关闭">×</button>
     </div>
     <div class="new-task-grid">
       <section class="manager-panel">
-        <div class="manager-title">自然语言输入</div>
-        <div class="manager-copy">写入口水话需求,生成给 AI 的结构化任务 JSON 提示词。</div>
+        <div class="manager-title" data-i18n="naturalInputTitle">自然语言输入</div>
+        <div class="manager-copy" data-i18n="naturalInputCopy">写入口水话需求,生成给 AI 的结构化任务 JSON 提示词。</div>
         <div class="manager-select-row">
           <select class="manager-select" id="intake-category">
             <option value="IDEA">Idea Intake</option>
@@ -913,25 +950,25 @@
             <option value="refactor">refactor</option>
           </select>
         </div>
-        <textarea class="manager-field" id="intake-text" placeholder="把想到的问题、需求、现象、期望用自然语言写在这里..."></textarea>
+        <textarea class="manager-field" id="intake-text" data-i18n-placeholder="intakePlaceholder" placeholder="把想到的问题、需求、现象、期望用自然语言写在这里..."></textarea>
         <div class="manager-actions">
-          <button class="action-btn primary" id="btn-generate-structure-prompt">生成结构化任务提示词</button>
+          <button class="action-btn primary" id="btn-generate-structure-prompt" data-i18n="generateStructurePrompt">生成结构化任务提示词</button>
         </div>
         <div class="field-shell">
-          <textarea class="manager-field manager-output" id="structure-prompt-output" placeholder="这里会生成给 AI 的提示词"></textarea>
-          <button class="field-copy-btn" data-copy-target="structure-prompt-output" title="复制" aria-label="复制结构化任务提示词">⧉</button>
+          <textarea class="manager-field manager-output" id="structure-prompt-output" data-i18n-placeholder="structurePromptPlaceholder" placeholder="这里会生成给 AI 的提示词"></textarea>
+          <button class="field-copy-btn" data-copy-target="structure-prompt-output" data-i18n-title="copy" data-i18n-aria="copyStructurePrompt" title="复制" aria-label="复制结构化任务提示词">⧉</button>
         </div>
       </section>
 
       <section class="manager-panel">
-        <div class="manager-title">AI JSON 导入</div>
-        <div class="manager-copy">粘贴 AI 生成的单个 task JSON 或 tasks 数组。无 ID 时会按分类补号。</div>
+        <div class="manager-title" data-i18n="jsonImportTitle">AI JSON 导入</div>
+        <div class="manager-copy" data-i18n="jsonImportCopy">粘贴 AI 生成的单个 task JSON 或 tasks 数组。无 ID 时会按分类补号。</div>
         <textarea class="manager-field" id="import-json" placeholder='{"title":"...","type":"bug","priority":"P1",...}'></textarea>
         <div class="manager-actions">
-          <button class="action-btn primary" id="btn-import-task">导入到当前列表</button>
-          <button class="action-btn" id="btn-validate-task">校验 JSON</button>
+          <button class="action-btn primary" id="btn-import-task" data-i18n="importCurrentList">导入到当前列表</button>
+          <button class="action-btn" id="btn-validate-task" data-i18n="validateJson">校验 JSON</button>
         </div>
-        <textarea class="manager-field manager-output" id="import-result" readonly placeholder="导入/校验结果"></textarea>
+        <textarea class="manager-field manager-output" id="import-result" readonly data-i18n-placeholder="importResultPlaceholder" placeholder="导入/校验结果"></textarea>
       </section>
     </div>
   </div>
@@ -940,7 +977,7 @@
 <div class="toast" id="toast"></div>
 
 <footer>
-  任务库自动保存到 localStorage · 导出 tasks.json 后可提交到 Git · 示例数据见 <code>examples/</code>
+  <span data-i18n="footerText">任务库自动保存到 localStorage · 导出 tasks.json 后可提交到 Git · 示例数据见</span> <code>examples/</code>
 </footer>
 
 <script>
@@ -950,20 +987,316 @@
 const STORAGE_KEY = 'ai-task-flow-state';
 const WORKSPACE_STORAGE_KEY = 'ai-task-flow-workspace';
 const LEGACY_STORAGE_KEY = 'golfhub-task-viewer-state';
+const LANG_STORAGE_KEY = 'ai-task-flow-lang';
+
+const I18N = {
+  zh: {
+    subtitle: 'AI 任务流转台 · 需求结构化 · Codex / Claude 提示词 · 执行结果回填',
+    newTaskButton: '+ 新任务',
+    loading: '正在加载 tasks.json...',
+    statOpen: '待处理',
+    statCurrent: '当前任务',
+    statDone: '已完成',
+    statSkipped: '已跳过',
+    statP0Open: 'P0 待处理',
+    runBackfillTitle: '执行结果回填',
+    runBackfillCopy: '粘贴 Codex / Claude 输出的结构化结果，写入 implementation_runs。',
+    applyRun: '回填执行结果',
+    copyRunTemplate: '复制结果模板',
+    runResultPlaceholder: '回填结果',
+    priority: '优先级',
+    status: '状态',
+    all: '全部',
+    open: '待处理',
+    done: '已完成',
+    skipped: '已跳过',
+    searchPlaceholder: '搜索任务 ID / 标题 / 描述...',
+    exportJson: '导出任务库 JSON',
+    generateDevPrompt: '生成开发提示词',
+    resetAll: '清除所有状态',
+    collapseAll: '全部折叠',
+    selectVisible: '选择当前筛选结果',
+    clearSelection: '清空选择',
+    devPromptPlaceholder: '选中任务后点击生成，这里会出现给 Codex / Claude 的开发提示词',
+    copy: '复制',
+    copyDevPrompt: '复制开发提示词',
+    copyStructurePrompt: '复制结构化任务提示词',
+    newTaskKicker: '新任务',
+    newTaskTitle: '需求收集箱',
+    newTaskCopy: '先把自然语言需求转成结构化任务提示词，再把 AI 返回的 JSON 导入任务库。',
+    close: '关闭',
+    naturalInputTitle: '自然语言输入',
+    naturalInputCopy: '写入自然语言需求，生成给 AI 的结构化任务 JSON 提示词。',
+    intakePlaceholder: '把想到的问题、需求、现象、期望写在这里...',
+    generateStructurePrompt: '生成结构化任务提示词',
+    structurePromptPlaceholder: '这里会生成给 AI 的提示词',
+    jsonImportTitle: 'AI JSON 导入',
+    jsonImportCopy: '粘贴 AI 生成的单个任务 JSON 或任务数组。无 ID 时会按分类补号。',
+    importCurrentList: '导入到当前列表',
+    validateJson: '校验 JSON',
+    importResultPlaceholder: '导入/校验结果',
+    footerText: '任务库自动保存到 localStorage · 导出 tasks.json 后可提交到 Git · 示例数据见',
+    selectedCount: count => `已选 ${count} 个任务`,
+    currentTask: '当前任务',
+    inProgress: '进行中',
+    copyId: '复制 ID',
+    scrollTo: '滚动到',
+    markDone: '标记完成',
+    unpin: '取消钉选',
+    noMatches: '没有匹配的任务',
+    selectForPrompt: '选择用于生成提示词',
+    untitled: '无标题',
+    problem: '问题',
+    expected: '期望结果',
+    constraints: '约束',
+    scopeHint: '影响范围',
+    searchHints: '搜索线索',
+    dependsOn: '依赖',
+    blocks: '阻塞',
+    implementationRuns: '执行记录',
+    doneAction: '标记完成',
+    doneMarked: '已完成',
+    skipAction: '跳过/已修复',
+    skippedMarked: '已跳过',
+    pinCurrent: '钉为当前',
+    pinned: '已钉选',
+    reset: '重置',
+    empty: '无',
+    needsLocate: '需要先定位',
+    completedExplain: '完成后说明验证结果',
+    copied: '已复制',
+    nothingToCopy: '没有可复制内容',
+    currentMarkedDone: id => `${id} 已标记完成`,
+    structurePromptReady: '已生成结构化任务提示词',
+    devPromptReady: '已生成开发提示词',
+    importSaved: '已导入并自动保存到本地',
+    runSaved: '执行结果已回填并保存',
+    exported: '已下载 tasks.json，可覆盖项目中的 tasks.json',
+    resetDone: '已重置所有状态',
+    needNaturalInput: '先填写自然语言需求',
+    needSelection: '先选择至少 1 个任务',
+    jsonValid: count => `JSON 有效，检测到 ${count} 个任务候选`,
+    jsonInvalid: error => `JSON 无效：${error}`,
+    importFailed: error => `导入失败：${error}`,
+    runFailed: error => `回填失败：${error}`,
+    missingTaskIds: '缺少 task_id 或 task_ids',
+    taskNotFound: id => `找不到任务：${id}`,
+    emptyContent: '内容为空',
+    taskMustObject: 'task 必须是对象',
+    missingTitle: '缺少 title',
+    manualJsonError: error => `JSON 格式错误：${error}`,
+    resetConfirm: '清除所有任务状态？进度条会归零。',
+    runResultSaved: ids => `已回填：${ids.join(', ')}。已自动保存到本地，导出 tasks.json 后可提交到 Git。`,
+    importedSummaryTitle: count => `已导入 ${count} 个任务`,
+    importedSummaryHint: '导入后的结构化信息如下。当前任务库已自动保存到本地。',
+    typeLabel: '类型',
+    priorityLabel: '优先级',
+    statusLabel: '状态',
+    problemUnderstanding: '问题 / 需求理解',
+    acceptance: '验收项',
+    doneDefinition: '完成定义',
+    loadingErrorTitle: '无法加载 tasks.json',
+    loadingErrorBody: '本页面需要从同目录加载 tasks.json。',
+    loadingErrorCors: '如果直接双击打开 HTML(file://)，浏览器会因 CORS 拒绝读取。',
+    loadingErrorSolution: '解决方法：在该文件目录下跑一个本地 HTTP 服务，然后访问 http://localhost:8000/：',
+    loadingErrorManual: '或者直接把 tasks.json 内容粘到下方的“手动加载”区：',
+    manualJsonPlaceholder: '粘贴 tasks.json 内容...',
+    load: '加载',
+    categoryOther: '其他',
+    categoryIdea: '想法收集',
+    categoryTask: '结构化任务',
+    categoryPrompt: 'AI 提示词',
+    categoryRun: '执行回填',
+    categoryGlobal: '全局体验',
+    legacyMatchList: '球局列表页',
+    legacyMultiScore: '多人记分页',
+    legacyScorecard: '计分卡详情页',
+    legacySbs: '逐杆记录',
+    legacyMap: '卫星地图'
+  },
+  en: {
+    subtitle: 'AI task flow · Structured intake · Codex / Claude prompts · Execution backfill',
+    newTaskButton: '+ New task',
+    loading: 'Loading tasks.json...',
+    statOpen: 'Open',
+    statCurrent: 'Current',
+    statDone: 'Done',
+    statSkipped: 'Skipped',
+    statP0Open: 'P0 Open',
+    runBackfillTitle: 'Execution Backfill',
+    runBackfillCopy: 'Paste structured output from Codex or Claude and write it into implementation_runs.',
+    applyRun: 'Apply result',
+    copyRunTemplate: 'Copy result template',
+    runResultPlaceholder: 'Backfill result',
+    priority: 'Priority',
+    status: 'Status',
+    all: 'All',
+    open: 'Open',
+    done: 'Done',
+    skipped: 'Skipped',
+    searchPlaceholder: 'Search task ID, title, or description...',
+    exportJson: 'Export task library JSON',
+    generateDevPrompt: 'Generate development prompt',
+    resetAll: 'Clear all status',
+    collapseAll: 'Collapse all',
+    selectVisible: 'Select filtered tasks',
+    clearSelection: 'Clear selection',
+    devPromptPlaceholder: 'Select tasks and generate a Codex / Claude development prompt here',
+    copy: 'Copy',
+    copyDevPrompt: 'Copy development prompt',
+    copyStructurePrompt: 'Copy structured task prompt',
+    newTaskKicker: 'New task',
+    newTaskTitle: 'Intake box',
+    newTaskCopy: 'Turn a rough request into a structured task prompt, then import the JSON returned by AI.',
+    close: 'Close',
+    naturalInputTitle: 'Natural language input',
+    naturalInputCopy: 'Write a rough request and generate a structured task JSON prompt for AI.',
+    intakePlaceholder: 'Write the problem, request, observation, or expected result here...',
+    generateStructurePrompt: 'Generate structured task prompt',
+    structurePromptPlaceholder: 'The AI prompt will appear here',
+    jsonImportTitle: 'AI JSON Import',
+    jsonImportCopy: 'Paste a single task JSON object or a task array generated by AI. Missing IDs are assigned by category.',
+    importCurrentList: 'Import into current list',
+    validateJson: 'Validate JSON',
+    importResultPlaceholder: 'Import / validation result',
+    footerText: 'Task library is auto-saved to localStorage · Export tasks.json to commit it to Git · Examples in',
+    selectedCount: count => `${count} task${count === 1 ? '' : 's'} selected`,
+    currentTask: 'Current task',
+    inProgress: 'In progress',
+    copyId: 'Copy ID',
+    scrollTo: 'Scroll to',
+    markDone: 'Mark done',
+    unpin: 'Unpin',
+    noMatches: 'No matching tasks',
+    selectForPrompt: 'Select for prompt generation',
+    untitled: 'Untitled',
+    problem: 'Problem',
+    expected: 'Expected',
+    constraints: 'Constraints',
+    scopeHint: 'Scope Hint',
+    searchHints: 'Search Hints',
+    dependsOn: 'Depends On',
+    blocks: 'Blocks',
+    implementationRuns: 'Implementation Runs',
+    doneAction: 'Mark done',
+    doneMarked: 'Done',
+    skipAction: 'Skip / already fixed',
+    skippedMarked: 'Skipped',
+    pinCurrent: 'Pin current',
+    pinned: 'Pinned',
+    reset: 'Reset',
+    empty: 'None',
+    needsLocate: 'Locate first',
+    completedExplain: 'Explain verification in the final response',
+    copied: 'Copied',
+    nothingToCopy: 'Nothing to copy',
+    currentMarkedDone: id => `${id} marked done`,
+    structurePromptReady: 'Structured task prompt generated',
+    devPromptReady: 'Development prompt generated',
+    importSaved: 'Imported and saved locally',
+    runSaved: 'Execution result backfilled and saved',
+    exported: 'Downloaded tasks.json. Use it to replace the project tasks.json when needed.',
+    resetDone: 'All status cleared',
+    needNaturalInput: 'Enter a natural language request first',
+    needSelection: 'Select at least one task first',
+    jsonValid: count => `Valid JSON. Found ${count} task candidate${count === 1 ? '' : 's'}.`,
+    jsonInvalid: error => `Invalid JSON: ${error}`,
+    importFailed: error => `Import failed: ${error}`,
+    runFailed: error => `Backfill failed: ${error}`,
+    missingTaskIds: 'Missing task_id or task_ids',
+    taskNotFound: id => `Task not found: ${id}`,
+    emptyContent: 'Content is empty',
+    taskMustObject: 'task must be an object',
+    missingTitle: 'Missing title',
+    manualJsonError: error => `Invalid JSON: ${error}`,
+    resetConfirm: 'Clear all task status? The progress bar will reset.',
+    runResultSaved: ids => `Backfilled: ${ids.join(', ')}. Saved locally. Export tasks.json to commit it to Git.`,
+    importedSummaryTitle: count => `Imported ${count} task${count === 1 ? '' : 's'}`,
+    importedSummaryHint: 'Structured import summary. The current task library has been saved locally.',
+    typeLabel: 'Type',
+    priorityLabel: 'Priority',
+    statusLabel: 'Status',
+    problemUnderstanding: 'Problem / request understanding',
+    acceptance: 'Acceptance',
+    doneDefinition: 'Done Definition',
+    loadingErrorTitle: 'Unable to load tasks.json',
+    loadingErrorBody: 'This page needs to load tasks.json from the same directory.',
+    loadingErrorCors: 'If you open the HTML file directly with file://, the browser may block the request because of CORS.',
+    loadingErrorSolution: 'Solution: run a local HTTP server in this directory, then open http://localhost:8000/:',
+    loadingErrorManual: 'Or paste the contents of tasks.json below and load it manually:',
+    manualJsonPlaceholder: 'Paste tasks.json content...',
+    load: 'Load',
+    categoryOther: 'Other',
+    categoryIdea: 'Idea Intake',
+    categoryTask: 'Structured Tasks',
+    categoryPrompt: 'AI Prompts',
+    categoryRun: 'Execution Backfill',
+    categoryGlobal: 'Global Experience',
+    legacyMatchList: 'Match List',
+    legacyMultiScore: 'Multi Score',
+    legacyScorecard: 'Scorecard',
+    legacySbs: 'Shot-by-Shot',
+    legacyMap: 'Map'
+  }
+};
+
 let tasksData = null;
 let state = {
   status: {},        // { taskId: 'open' | 'done' | 'skipped' }, only overrides base JSON
   current: null,     // current pinned task ID
   expanded: {},      // { taskId: true } for expanded cards
   selected: {},      // { taskId: true } for prompt generation
-  filter: { priority: 'all', status: 'all', search: '' }
+  filter: { priority: 'all', status: 'all', search: '' },
+  lang: 'en'
 };
+
+function detectLanguage() {
+  const saved = localStorage.getItem(LANG_STORAGE_KEY);
+  if (saved === 'zh' || saved === 'en') return saved;
+  return (navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en';
+}
+
+state.lang = detectLanguage();
+
+function t(key, ...args) {
+  const value = (I18N[state.lang] && I18N[state.lang][key]) || I18N.en[key] || key;
+  return typeof value === 'function' ? value(...args) : value;
+}
+
+function setLanguage(lang) {
+  state.lang = lang === 'zh' ? 'zh' : 'en';
+  localStorage.setItem(LANG_STORAGE_KEY, state.lang);
+  applyI18n();
+  renderIntakeCategories();
+  render();
+  saveState();
+}
+
+function applyI18n() {
+  document.documentElement.lang = state.lang === 'zh' ? 'zh-CN' : 'en';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.setAttribute('placeholder', t(el.dataset.i18nPlaceholder));
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    el.setAttribute('title', t(el.dataset.i18nTitle));
+  });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+    el.setAttribute('aria-label', t(el.dataset.i18nAria));
+  });
+  document.querySelectorAll('[data-lang]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === state.lang);
+  });
+}
 
 function loadState() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
     if (stored) state = { ...state, ...JSON.parse(stored) };
   } catch (e) {}
+  state.lang = detectLanguage();
   try {
     const workspace = localStorage.getItem(WORKSPACE_STORAGE_KEY);
     if (workspace) tasksData = JSON.parse(workspace);
@@ -974,7 +1307,8 @@ function saveState() {
     status: state.status,
     current: state.current,
     expanded: state.expanded,
-    selected: state.selected
+    selected: state.selected,
+    lang: state.lang
   }));
 }
 function saveWorkspace() {
@@ -993,19 +1327,20 @@ async function loadTasks() {
     document.getElementById('loading').style.display = 'none';
     document.getElementById('content').style.display = 'block';
     loadState();
+    applyI18n();
     renderIntakeCategories();
     render();
   } catch (e) {
     document.getElementById('loading').innerHTML = `
       <div class="loading-error">
-        <strong>无法加载 tasks.json</strong><br><br>
-        本页面需要从同目录加载 <code>tasks.json</code>。<br>
-        如果直接双击打开 HTML(<code>file://</code>),浏览器会因 CORS 拒绝读取。<br><br>
-        <strong>解决方法</strong>:在该文件目录下跑一个本地 HTTP 服务,然后访问 <code>http://localhost:8000/</code>:<br><br>
+        <strong>${t('loadingErrorTitle')}</strong><br><br>
+        ${t('loadingErrorBody')}<br>
+        ${t('loadingErrorCors')}<br><br>
+        <strong>${t('loadingErrorSolution')}</strong><br><br>
         <code>python3 -m http.server 8000</code><br><br>
-        或者直接把 tasks.json 内容粘到下方的"手动加载"区:<br>
-        <textarea id="manual-json" rows="6" style="width: 100%; margin-top: 10px; font-family: 'SF Mono', monospace; font-size: 11px;" placeholder='粘贴 tasks.json 内容...'></textarea>
-        <button id="btn-manual" style="margin-top: 8px; padding: 6px 14px; background: var(--ink); color: var(--bg-alt); border: none; border-radius: 4px; cursor: pointer;">加载</button>
+        ${t('loadingErrorManual')}<br>
+        <textarea id="manual-json" rows="6" style="width: 100%; margin-top: 10px; font-family: 'SF Mono', monospace; font-size: 11px;" placeholder="${t('manualJsonPlaceholder')}"></textarea>
+        <button id="btn-manual" style="margin-top: 8px; padding: 6px 14px; background: var(--ink); color: var(--bg-alt); border: none; border-radius: 4px; cursor: pointer;">${t('load')}</button>
       </div>
     `;
     document.getElementById('btn-manual')?.addEventListener('click', () => {
@@ -1016,10 +1351,11 @@ async function loadTasks() {
         document.getElementById('loading').style.display = 'none';
         document.getElementById('content').style.display = 'block';
         loadState();
+        applyI18n();
         renderIntakeCategories();
         render();
       } catch (err) {
-        alert('JSON 格式错误: ' + err.message);
+        alert(t('manualJsonError', err.message));
       }
     });
   }
@@ -1038,19 +1374,19 @@ function getTask(taskId) {
 }
 
 const DEFAULT_TASK_CATEGORIES = [
-  { prefix: 'IDEA', label: 'Idea Intake' },
-  { prefix: 'TASK', label: 'Structured Tasks' },
-  { prefix: 'PROMPT', label: 'AI Prompts' },
-  { prefix: 'RUN', label: 'Execution Backfill' },
-  { prefix: 'GLOBAL', label: 'Global Experience' }
+  { prefix: 'IDEA', labelKey: 'categoryIdea' },
+  { prefix: 'TASK', labelKey: 'categoryTask' },
+  { prefix: 'PROMPT', labelKey: 'categoryPrompt' },
+  { prefix: 'RUN', labelKey: 'categoryRun' },
+  { prefix: 'GLOBAL', labelKey: 'categoryGlobal' }
 ];
 
 const LEGACY_TASK_CATEGORIES = [
-  { prefix: 'MATCH_LIST', label: '球局列表页' },
-  { prefix: 'MULTI_SCORE', label: '多人记分页' },
-  { prefix: 'SCORECARD', label: '计分卡详情页' },
-  { prefix: 'SBS', label: '逐杆记录(SBS)' },
-  { prefix: 'MAP', label: '卫星地图' }
+  { prefix: 'MATCH_LIST', labelKey: 'legacyMatchList' },
+  { prefix: 'MULTI_SCORE', labelKey: 'legacyMultiScore' },
+  { prefix: 'SCORECARD', labelKey: 'legacyScorecard' },
+  { prefix: 'SBS', labelKey: 'legacySbs' },
+  { prefix: 'MAP', labelKey: 'legacyMap' }
 ];
 
 function getProjectContext() {
@@ -1062,9 +1398,17 @@ function getTaskCategories() {
   if (Array.isArray(categories) && categories.length) {
     return categories
       .filter(c => c && c.prefix)
-      .map(c => ({ prefix: String(c.prefix), label: c.label || c.prefix }));
+      .map(c => {
+        const known = DEFAULT_TASK_CATEGORIES.find(item => item.prefix === c.prefix);
+        return { prefix: String(c.prefix), label: c.label || c.prefix, labelKey: known?.labelKey };
+      });
   }
   return DEFAULT_TASK_CATEGORIES;
+}
+
+function categoryLabel(category) {
+  if (!category) return t('categoryOther');
+  return category.labelKey ? t(category.labelKey) : (category.label || category.prefix);
 }
 
 function getAllKnownCategories() {
@@ -1081,28 +1425,28 @@ function categoryFromId(id) {
   const match = getAllKnownCategories()
     .sort((a, b) => b.prefix.length - a.prefix.length)
     .find(c => id === c.prefix || id.startsWith(c.prefix + '_'));
-  if (match) return match.label;
+  if (match) return categoryLabel(match);
   const inferred = String(id || '').split('_').slice(0, -1).join('_');
   if (inferred) return inferred;
-  return '其他';
+  return t('categoryOther');
 }
 
 function prefixFromCategory(category) {
-  const match = getAllKnownCategories().find(c => c.prefix === category || c.label === category);
+  const match = getAllKnownCategories().find(c => c.prefix === category || c.label === category || categoryLabel(c) === category);
   return match ? match.prefix : 'TASK';
 }
 
 function getCategoryOrder() {
   return [...getTaskCategories(), ...LEGACY_TASK_CATEGORIES]
-    .map(c => c.label)
-    .concat('其他');
+    .map(categoryLabel)
+    .concat(t('categoryOther'));
 }
 
 function renderIntakeCategories() {
   const select = document.getElementById('intake-category');
   if (!select) return;
   select.innerHTML = getTaskCategories()
-    .map(c => `<option value="${escapeHTML(c.prefix)}">${escapeHTML(c.label)}</option>`)
+    .map(c => `<option value="${escapeHTML(c.prefix)}">${escapeHTML(categoryLabel(c))}</option>`)
     .join('');
 }
 
@@ -1156,14 +1500,14 @@ function renderCurrentPin() {
   pin.style.display = 'block';
   pin.className = 'current-pin';
   pin.innerHTML = `
-    <div class="pin-label">当前任务 · ${status === 'open' ? '进行中' : status}</div>
+    <div class="pin-label">${t('currentTask')} · ${status === 'open' ? t('inProgress') : t(status)}</div>
     <div class="pin-task-id">${current.id} · ${current.priority || ''} · ${current.type || ''}</div>
     <div class="pin-title">${current.title || ''}</div>
     <div class="pin-actions">
-      <button class="pin-btn" onclick="copyText('${current.id}')">复制 ID</button>
-      <button class="pin-btn" onclick="scrollToTask('${current.id}')">滚动到</button>
-      <button class="pin-btn" onclick="markCurrentDone()">✅ 标记完成</button>
-      <button class="pin-btn" onclick="unpinCurrent()">取消钉选</button>
+      <button class="pin-btn" onclick="copyText('${current.id}')">${t('copyId')}</button>
+      <button class="pin-btn" onclick="scrollToTask('${current.id}')">${t('scrollTo')}</button>
+      <button class="pin-btn" onclick="markCurrentDone()">✓ ${t('markDone')}</button>
+      <button class="pin-btn" onclick="unpinCurrent()">${t('unpin')}</button>
     </div>
   `;
 }
@@ -1198,7 +1542,7 @@ function renderFilters() {
 
 function renderSelection() {
   const ids = selectedTaskIds();
-  document.getElementById('selection-count').textContent = `已选 ${ids.length} 个任务`;
+  document.getElementById('selection-count').textContent = t('selectedCount', ids.length);
 }
 
 function matchesFilter(task) {
@@ -1249,7 +1593,7 @@ function renderTasks() {
   });
 
   if (list.children.length === 0) {
-    list.innerHTML = '<div class="loading">没有匹配的任务</div>';
+    list.innerHTML = `<div class="loading">${t('noMatches')}</div>`;
   }
 }
 
@@ -1268,28 +1612,28 @@ function makeTaskCard(task) {
 
   card.innerHTML = `
     <div class="task-header">
-      <input class="task-select" type="checkbox" data-action="select" data-id="${task.id}" ${isSelected ? 'checked' : ''} title="选择用于生成提示词">
+      <input class="task-select" type="checkbox" data-action="select" data-id="${task.id}" ${isSelected ? 'checked' : ''} title="${t('selectForPrompt')}">
       <div class="task-status-icon">${statusIcon}</div>
       <span class="task-priority ${(task.priority || 'P2').toLowerCase()}">${task.priority || ''}</span>
       <span class="task-id">${task.id}</span>
-      <span class="task-title">${task.title || '(无标题)'}</span>
+      <span class="task-title">${task.title || '(' + t('untitled') + ')'}</span>
       <span class="task-toggle">▶</span>
     </div>
     <div class="task-detail">
-      ${task.problem ? `<div class="detail-section"><div class="detail-label">Problem</div><div class="detail-content">${task.problem}</div></div>` : ''}
-      ${task.expected ? `<div class="detail-section"><div class="detail-label">Expected</div><div class="detail-content">${task.expected}</div></div>` : ''}
-      ${task.constraints && task.constraints.length ? `<div class="detail-section"><div class="detail-label">Constraints</div><div class="detail-content"><ul>${task.constraints.map(c => '<li>' + c + '</li>').join('')}</ul></div></div>` : ''}
-      ${task.scope && task.scope.allowed_paths_hint && task.scope.allowed_paths_hint.length ? `<div class="detail-section"><div class="detail-label">Scope Hint</div><div class="detail-content">${task.scope.allowed_paths_hint.map(p => '<code>' + p + '</code>').join(' · ')}</div></div>` : ''}
-      ${task.anchors && task.anchors.search_hints && task.anchors.search_hints.length ? `<div class="detail-section"><div class="detail-label">Search Hints</div><div class="detail-content">${task.anchors.search_hints.map(p => '<code>' + p + '</code>').join(' · ')}</div></div>` : ''}
-      ${task.depends_on && task.depends_on.length ? `<div class="detail-section"><div class="detail-label">Depends On</div><div class="detail-content">${task.depends_on.map(p => '<span class="task-tag">' + p + '</span>').join('')}</div></div>` : ''}
-      ${task.blocks && task.blocks.length ? `<div class="detail-section"><div class="detail-label">Blocks</div><div class="detail-content">${task.blocks.map(p => '<span class="task-tag">' + p + '</span>').join('')}</div></div>` : ''}
-      ${runs.length ? `<div class="detail-section"><div class="detail-label">Implementation Runs</div><div class="detail-content">${runs.map(runSummaryHTML).join('')}</div></div>` : ''}
+      ${task.problem ? `<div class="detail-section"><div class="detail-label">${t('problem')}</div><div class="detail-content">${task.problem}</div></div>` : ''}
+      ${task.expected ? `<div class="detail-section"><div class="detail-label">${t('expected')}</div><div class="detail-content">${task.expected}</div></div>` : ''}
+      ${task.constraints && task.constraints.length ? `<div class="detail-section"><div class="detail-label">${t('constraints')}</div><div class="detail-content"><ul>${task.constraints.map(c => '<li>' + c + '</li>').join('')}</ul></div></div>` : ''}
+      ${task.scope && task.scope.allowed_paths_hint && task.scope.allowed_paths_hint.length ? `<div class="detail-section"><div class="detail-label">${t('scopeHint')}</div><div class="detail-content">${task.scope.allowed_paths_hint.map(p => '<code>' + p + '</code>').join(' · ')}</div></div>` : ''}
+      ${task.anchors && task.anchors.search_hints && task.anchors.search_hints.length ? `<div class="detail-section"><div class="detail-label">${t('searchHints')}</div><div class="detail-content">${task.anchors.search_hints.map(p => '<code>' + p + '</code>').join(' · ')}</div></div>` : ''}
+      ${task.depends_on && task.depends_on.length ? `<div class="detail-section"><div class="detail-label">${t('dependsOn')}</div><div class="detail-content">${task.depends_on.map(p => '<span class="task-tag">' + p + '</span>').join('')}</div></div>` : ''}
+      ${task.blocks && task.blocks.length ? `<div class="detail-section"><div class="detail-label">${t('blocks')}</div><div class="detail-content">${task.blocks.map(p => '<span class="task-tag">' + p + '</span>').join('')}</div></div>` : ''}
+      ${runs.length ? `<div class="detail-section"><div class="detail-label">${t('implementationRuns')}</div><div class="detail-content">${runs.map(runSummaryHTML).join('')}</div></div>` : ''}
       <div class="task-actions">
-        <button class="task-action-btn done-btn" data-action="done" data-id="${task.id}">${status === 'done' ? '✓ 已完成' : '✅ 标记完成'}</button>
-        <button class="task-action-btn skip-btn" data-action="skipped" data-id="${task.id}">${status === 'skipped' ? '⏭ 已跳过' : '⏭️ 跳过/已修复'}</button>
-        <button class="task-action-btn pin-btn ${isCurrent ? 'active' : ''}" data-action="pin" data-id="${task.id}">${isCurrent ? '📌 已钉选' : '📌 钉为当前'}</button>
-        ${status !== 'open' ? `<button class="task-action-btn reset-btn" data-action="reset" data-id="${task.id}">🔄 重置</button>` : ''}
-        <button class="task-action-btn" data-action="copy" data-id="${task.id}">复制 ID</button>
+        <button class="task-action-btn done-btn" data-action="done" data-id="${task.id}">${status === 'done' ? '✓ ' + t('doneMarked') : '✓ ' + t('doneAction')}</button>
+        <button class="task-action-btn skip-btn" data-action="skipped" data-id="${task.id}">${status === 'skipped' ? '⏭ ' + t('skippedMarked') : '⏭ ' + t('skipAction')}</button>
+        <button class="task-action-btn pin-btn ${isCurrent ? 'active' : ''}" data-action="pin" data-id="${task.id}">${isCurrent ? '📌 ' + t('pinned') : '📌 ' + t('pinCurrent')}</button>
+        ${status !== 'open' ? `<button class="task-action-btn reset-btn" data-action="reset" data-id="${task.id}">↺ ${t('reset')}</button>` : ''}
+        <button class="task-action-btn" data-action="copy" data-id="${task.id}">${t('copyId')}</button>
       </div>
     </div>
   `;
@@ -1361,7 +1705,7 @@ function nextTaskId(prefix) {
 
 function parseJSONLoose(text) {
   const trimmed = text.trim();
-  if (!trimmed) throw new Error('内容为空');
+  if (!trimmed) throw new Error(t('emptyContent'));
   try {
     return JSON.parse(trimmed);
   } catch (firstError) {
@@ -1377,9 +1721,9 @@ function parseJSONLoose(text) {
 function normalizeImportedTask(raw, preferredPrefix) {
   const task = raw.task ? raw.task : raw;
   if (!task || typeof task !== 'object' || Array.isArray(task)) {
-    throw new Error('task 必须是对象');
+    throw new Error(t('taskMustObject'));
   }
-  if (!task.title) throw new Error('缺少 title');
+  if (!task.title) throw new Error(t('missingTitle'));
   const prefix = prefixFromCategory(task.category || task.area || preferredPrefix);
   const id = task.id || nextTaskId(prefix);
   return {
@@ -1407,7 +1751,7 @@ function normalizeImportedTask(raw, preferredPrefix) {
   };
 }
 
-function formatTaskListValue(value, fallback = '无') {
+function formatTaskListValue(value, fallback = t('empty')) {
   if (!value) return fallback;
   if (Array.isArray(value)) {
     if (!value.length) return fallback;
@@ -1422,35 +1766,35 @@ function formatImportedTaskSummary(task) {
   const acceptance = task.acceptance || {};
   return [
     `${task.id} · ${task.title}`,
-    `类型: ${task.type || 'improvement'}    优先级: ${task.priority || 'P2'}    状态: ${task.status || 'open'}`,
+    `${t('typeLabel')}: ${task.type || 'improvement'}    ${t('priorityLabel')}: ${task.priority || 'P2'}    ${t('statusLabel')}: ${task.status || 'open'}`,
     '',
-    '问题 / 需求理解:',
-    task.problem || '无',
+    `${t('problemUnderstanding')}:`,
+    task.problem || t('empty'),
     '',
-    '期望结果:',
-    task.expected || '无',
+    `${t('expected')}:`,
+    task.expected || t('empty'),
     '',
-    '约束:',
+    `${t('constraints')}:`,
     formatTaskListValue(task.constraints),
     '',
-    '影响范围:',
+    `${t('scopeHint')}:`,
     formatTaskListValue(scope.allowed_paths_hint),
     '',
-    '搜索线索:',
+    `${t('searchHints')}:`,
     formatTaskListValue(anchors.search_hints),
     '',
-    '验收项:',
+    `${t('acceptance')}:`,
     formatTaskListValue(acceptance.manual_checks || acceptance.unit_tests || acceptance.ui_tests),
     '',
-    '完成定义:',
+    `${t('doneDefinition')}:`,
     formatTaskListValue(task.done_definition)
   ].join('\n');
 }
 
 function formatImportedTasksSummary(tasks) {
   return [
-    `已导入 ${tasks.length} 个 task`,
-    '导入后的结构化信息如下。请确认无误后导出 tasks.json 持久化。',
+    t('importedSummaryTitle', tasks.length),
+    t('importedSummaryHint'),
     '',
     tasks.map(formatImportedTaskSummary).join('\n\n' + '-'.repeat(48) + '\n\n')
   ].join('\n');
@@ -1515,10 +1859,54 @@ function buildStructurePrompt() {
   const category = document.getElementById('intake-category').value;
   const type = document.getElementById('intake-type').value;
   if (!raw) {
-    showToast('先填写自然语言需求');
+    showToast(t('needNaturalInput'));
     return '';
   }
   const prefix = prefixFromCategory(category);
+  if (state.lang === 'en') {
+    return `You are the product and engineering task analyst for ${getProjectContext().name || 'the current project'}. Convert the natural language request below into a structured task JSON object that can be imported into AI Task Flow tasks.json.
+
+Project context:
+${projectContextPromptBlock()}
+- Suggested task ID prefix: ${prefix}
+- Suggested type: ${type}
+
+Return only one JSON object. Do not include Markdown or explanations. The object must follow this shape:
+{
+  "title": "Short title",
+  "type": "bug|feature|design|improvement|refactor|perf|test|docs",
+  "priority": "P0|P1|P2|P3",
+  "status": "open",
+  "scope": {
+    "allowed_paths_hint": ["Likely modules or paths"],
+    "forbidden_paths_hint": ["Modules or paths that should not be touched"]
+  },
+  "anchors": {
+    "primary_files": [],
+    "primary_symbols": [],
+    "search_hints": ["Keywords for rg search"]
+  },
+  "problem": "Deep understanding of the problem or request",
+  "expected": "Clear expected outcome",
+  "constraints": ["Boundaries and non-goals"],
+  "acceptance": {
+    "unit_tests": [{"name": "test...", "assertion": "..."}],
+    "ui_tests": [{"name": "test...", "assertion": "..."}],
+    "manual_checks": ["Manual acceptance checks"]
+  },
+  "done_definition": ["Definition of done"],
+  "tracking": {
+    "branch": "${type}/${prefix}_XXX-kebab-summary",
+    "commit_prefix": "${type}(${prefix.toLowerCase().replaceAll('_', '-')})",
+    "pr_title": "[${prefix}_XXX] Title"
+  },
+  "raw_inputs": [{"source": "user_natural_language", "text": ${JSON.stringify(raw)}}],
+  "implementation_runs": []
+}
+
+Natural language request:
+${raw}`;
+  }
   return `你是 ${getProjectContext().name || '当前项目'} 的产品/工程任务分析助手。请把下面的自然语言需求转成一个可导入 AI Task Flow tasks.json 的结构化 task JSON。
 
 项目背景:
@@ -1576,25 +1964,53 @@ Expected:
 ${task.expected || ''}
 
 Constraints:
-${(task.constraints || []).map(c => `- ${c}`).join('\n') || '- 无'}
+${(task.constraints || []).map(c => `- ${c}`).join('\n') || '- ' + t('empty')}
 
 Scope Hint:
-${((task.scope || {}).allowed_paths_hint || []).map(p => `- ${p}`).join('\n') || '- 需要先定位'}
+${((task.scope || {}).allowed_paths_hint || []).map(p => `- ${p}`).join('\n') || '- ' + t('needsLocate')}
 
 Search Hints:
-${((task.anchors || {}).search_hints || []).map(p => `- ${p}`).join('\n') || '- 无'}
+${((task.anchors || {}).search_hints || []).map(p => `- ${p}`).join('\n') || '- ' + t('empty')}
 
 Acceptance:
 ${JSON.stringify(task.acceptance || {}, null, 2)}
 
 Done Definition:
-${(task.done_definition || []).map(d => `- ${d}`).join('\n') || '- 完成后说明验证结果'}`;
+${(task.done_definition || []).map(d => `- ${d}`).join('\n') || '- ' + t('completedExplain')}`;
 }
 
 function buildDevPrompt(tasks) {
   if (!tasks.length) {
-    showToast('先选择至少 1 个任务');
+    showToast(t('needSelection'));
     return '';
+  }
+  if (state.lang === 'en') {
+    return `You are now working in the ${getProjectContext().name || 'current project'} repository. Read the relevant code first and do a short self-check:
+1. Impact analysis: which modules will be touched, and whether new coupling is introduced
+2. Architecture consistency: whether the implementation follows the current project architecture and conventions
+3. Testability: how to verify the change, and whether debug information is needed
+
+Project context:
+${projectContextPromptBlock()}
+
+Execution requirements:
+- Implement only the tasks below; do not refactor unrelated code
+- Prefer rg with the Search Hints
+- Run feasible validation after changes, or explain why validation could not be run
+- At the end of your final response, output a copyable JSON code block for backfilling this task system:
+{
+  "task_id": "TASK_ID, or use task_ids for multiple tasks",
+  "status": "done|blocked|needs_followup",
+  "commit": "Commit SHA if committed, otherwise empty",
+  "summary": "Implementation summary",
+  "changed_files": ["relative paths"],
+  "verification": ["validation commands and results"],
+  "followups": ["items that need further tracking"]
+}
+
+Tasks:
+
+${tasks.map(taskPromptBlock).join('\n\n---\n\n')}`;
   }
   return `你现在在 ${getProjectContext().name || '当前项目'} 仓库中执行以下任务。请先阅读相关代码并做简短自检:
 1. Impact analysis: 会触碰哪些模块,是否引入新耦合
@@ -1625,13 +2041,13 @@ ${tasks.map(taskPromptBlock).join('\n\n---\n\n')}`;
 }
 
 window.copyText = function(text) {
-  navigator.clipboard.writeText(text).then(() => showToast('已复制'));
+  navigator.clipboard.writeText(text).then(() => showToast(t('copied')));
 };
 
 function copyFromElement(id) {
   const el = document.getElementById(id);
   if (!el || !el.value) {
-    showToast('没有可复制内容');
+    showToast(t('nothingToCopy'));
     return;
   }
   copyText(el.value);
@@ -1662,7 +2078,7 @@ window.markCurrentDone = function() {
     state.current = null;
     saveState();
     render();
-    showToast('✅ ' + id + ' 已标记完成');
+    showToast(t('currentMarkedDone', id));
   }
 };
 
@@ -1699,6 +2115,9 @@ document.getElementById('search').addEventListener('input', e => {
   renderTasks();
 });
 
+document.querySelectorAll('[data-lang]').forEach(btn => {
+  btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+});
 document.getElementById('btn-new-task').addEventListener('click', openNewTaskModal);
 document.getElementById('btn-close-new-task').addEventListener('click', closeNewTaskModal);
 document.getElementById('new-task-backdrop').addEventListener('click', closeNewTaskModal);
@@ -1717,16 +2136,16 @@ document.getElementById('btn-generate-structure-prompt').addEventListener('click
   const prompt = buildStructurePrompt();
   if (!prompt) return;
   document.getElementById('structure-prompt-output').value = prompt;
-  showToast('已生成结构化任务提示词');
+  showToast(t('structurePromptReady'));
 });
 
 document.getElementById('btn-validate-task').addEventListener('click', () => {
   try {
     const value = parseJSONLoose(document.getElementById('import-json').value);
     const list = Array.isArray(value) ? value : value.tasks || [value];
-    document.getElementById('import-result').value = `JSON 有效,检测到 ${list.length} 个 task 候选`;
+    document.getElementById('import-result').value = t('jsonValid', list.length);
   } catch (e) {
-    document.getElementById('import-result').value = 'JSON 无效: ' + e.message;
+    document.getElementById('import-result').value = t('jsonInvalid', e.message);
   }
 });
 
@@ -1750,9 +2169,9 @@ document.getElementById('btn-import-task').addEventListener('click', () => {
     saveState();
     render();
     document.getElementById('import-result').value = formatImportedTasksSummary(imported);
-    showToast('已导入并自动保存到本地');
+    showToast(t('importSaved'));
   } catch (e) {
-    document.getElementById('import-result').value = '导入失败: ' + e.message;
+    document.getElementById('import-result').value = t('importFailed', e.message);
   }
 });
 
@@ -1760,7 +2179,7 @@ document.getElementById('btn-generate-dev-prompt').addEventListener('click', () 
   const prompt = buildDevPrompt(selectedTasks());
   if (!prompt) return;
   document.getElementById('dev-prompt-output').value = prompt;
-  showToast('已生成开发提示词');
+  showToast(t('devPromptReady'));
 });
 
 document.getElementById('btn-select-visible').addEventListener('click', () => {
@@ -1794,12 +2213,12 @@ document.getElementById('btn-apply-run').addEventListener('click', () => {
   try {
     const run = parseJSONLoose(document.getElementById('run-json').value);
     const ids = run.task_ids || (run.task_id ? [run.task_id] : []);
-    if (!ids.length) throw new Error('缺少 task_id 或 task_ids');
+    if (!ids.length) throw new Error(t('missingTaskIds'));
     const now = new Date().toISOString();
     const updated = [];
     ids.forEach(id => {
       const task = getTask(id);
-      if (!task) throw new Error('找不到任务: ' + id);
+      if (!task) throw new Error(t('taskNotFound', id));
       if (!Array.isArray(task.implementation_runs)) task.implementation_runs = [];
       task.implementation_runs.push({
         agent: run.agent || 'codex',
@@ -1818,10 +2237,10 @@ document.getElementById('btn-apply-run').addEventListener('click', () => {
     });
     saveWorkspace();
     render();
-    document.getElementById('run-result').value = `已回填: ${updated.join(', ')}。已自动保存到本地,导出 tasks.json 后可提交到 Git。`;
-    showToast('执行结果已回填并保存');
+    document.getElementById('run-result').value = t('runResultSaved', updated);
+    showToast(t('runSaved'));
   } catch (e) {
-    document.getElementById('run-result').value = '回填失败: ' + e.message;
+    document.getElementById('run-result').value = t('runFailed', e.message);
   }
 });
 
@@ -1846,11 +2265,11 @@ document.getElementById('btn-export').addEventListener('click', () => {
   URL.revokeObjectURL(url);
   tasksData = merged;
   saveWorkspace();
-  showToast('已下载 tasks.json,覆盖项目中的 tasks.json 即可同步');
+  showToast(t('exported'));
 });
 
 document.getElementById('btn-reset-all').addEventListener('click', () => {
-  if (confirm('清除所有 task 状态?(进度条会归零)')) {
+  if (confirm(t('resetConfirm'))) {
     getTasks().forEach(task => { task.status = 'open'; });
     state.status = {};
     state.current = null;
@@ -1859,7 +2278,7 @@ document.getElementById('btn-reset-all').addEventListener('click', () => {
     saveWorkspace();
     saveState();
     render();
-    showToast('已重置所有状态');
+    showToast(t('resetDone'));
   }
 });
 
@@ -1872,6 +2291,7 @@ document.getElementById('btn-collapse-all').addEventListener('click', () => {
 // ============================================================
 // Boot
 // ============================================================
+applyI18n();
 loadTasks();
 </script>
 
