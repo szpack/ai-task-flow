@@ -465,11 +465,12 @@
   .detail-label {
     font-family: "Cormorant Garamond", serif;
     font-style: italic;
-    font-size: 11px;
-    color: var(--accent);
-    letter-spacing: 1.5px;
+    font-size: 12px;
+    color: var(--augusta-green);
+    letter-spacing: 1px;
     text-transform: uppercase;
     margin-bottom: 4px;
+    font-weight: 600;
   }
   .detail-content {
     color: var(--ink);
@@ -492,34 +493,48 @@
 
   .task-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 6px;
     margin-top: 14px;
     padding-top: 12px;
     border-top: 1px dashed var(--line);
   }
   .task-action-btn {
-    padding: 5px 12px;
-    border: 1px solid var(--line);
-    background: var(--paper);
+    padding: 6px 12px;
+    border: 1px solid rgba(28, 26, 20, 0.20);
+    background: rgba(241, 234, 208, 0.78);
     border-radius: 4px;
     font-family: inherit;
     font-size: 12px;
     cursor: pointer;
-    color: var(--ink-soft);
+    color: var(--ink);
     transition: all 0.15s;
   }
   .task-action-btn:hover {
-    border-color: var(--accent);
+    background: var(--paper);
+    border-color: rgba(28, 26, 20, 0.36);
     color: var(--ink);
+  }
+  .task-action-btn.done-btn {
+    background: rgba(45, 106, 79, 0.08);
+    border-color: rgba(45, 106, 79, 0.28);
+  }
+  .task-action-btn.skip-btn {
+    background: rgba(138, 132, 117, 0.10);
+    border-color: rgba(138, 132, 117, 0.34);
+  }
+  .task-action-btn.pin-btn {
+    background: rgba(212, 180, 106, 0.16);
+    border-color: rgba(212, 180, 106, 0.42);
   }
   .task-action-btn.done-btn:hover { background: var(--done); color: var(--paper); border-color: var(--done); }
   .task-action-btn.skip-btn:hover { background: var(--skipped); color: var(--paper); border-color: var(--skipped); }
   .task-action-btn.pin-btn:hover { background: var(--accent); color: var(--ink); border-color: var(--accent); }
   .task-action-btn.reset-btn:hover { background: var(--ink); color: var(--bg-alt); }
   .task-action-btn.active {
-    background: var(--accent);
-    color: var(--ink);
-    border-color: var(--accent);
+    background: var(--augusta-green);
+    color: var(--paper);
+    border-color: var(--augusta-green);
   }
 
   .task-tag {
