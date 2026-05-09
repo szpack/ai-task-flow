@@ -177,10 +177,6 @@
     background: rgba(245, 224, 143, 0.045);
     box-shadow: inset 0 1px 0 rgba(245, 224, 143, 0.06);
   }
-  .workspace-section.stats-section {
-    background: rgba(245, 224, 143, 0.035);
-    padding: 12px 14px;
-  }
   .workspace-section.workflow-section {
     background: rgba(31, 90, 61, 0.28);
     border-color: rgba(245, 224, 143, 0.20);
@@ -188,6 +184,9 @@
   .workspace-section.library-section {
     background: rgba(10, 40, 24, 0.34);
     border-color: rgba(212, 180, 106, 0.28);
+  }
+  .library-section .stats {
+    margin-bottom: 12px;
   }
   .workspace-section.prompt-section {
     background: rgba(31, 90, 61, 0.18);
@@ -1016,23 +1015,6 @@
 
   <div id="current-pin"></div>
 
-  <section class="workspace-section stats-section">
-    <div class="stats">
-      <div class="stat open"><div class="stat-num" id="stat-open">0</div><div class="stat-label" data-i18n="statOpen">Open</div></div>
-      <div class="stat in-progress"><div class="stat-num" id="stat-progress">0</div><div class="stat-label" data-i18n="statCurrent">In Progress</div></div>
-      <div class="stat done"><div class="stat-num" id="stat-done">0</div><div class="stat-label" data-i18n="statDone">Done</div></div>
-      <div class="stat skipped"><div class="stat-num" id="stat-skipped">0</div><div class="stat-label" data-i18n="statSkipped">Skipped</div></div>
-      <div class="stat p0"><div class="stat-num" id="stat-p0">0</div><div class="stat-label" data-i18n="statP0Open">P0 Open</div></div>
-    </div>
-
-    <div class="progress-wrapper">
-      <div class="progress-bar">
-        <div class="progress-done" id="bar-done"></div>
-        <div class="progress-skipped" id="bar-skipped"></div>
-      </div>
-    </div>
-  </section>
-
   <section class="workspace-section workflow-section">
     <div class="workflow" id="workflow">
       <section class="workflow-step">
@@ -1062,6 +1044,21 @@
     <div class="section-heading" id="task-library-section">
       <div class="section-title" data-i18n="taskLibraryTitle">Task Library</div>
       <div class="section-copy" data-i18n="taskLibraryCopy">Filter, inspect, select, or pin tasks.</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat open"><div class="stat-num" id="stat-open">0</div><div class="stat-label" data-i18n="statOpen">Open</div></div>
+      <div class="stat in-progress"><div class="stat-num" id="stat-progress">0</div><div class="stat-label" data-i18n="statCurrent">In Progress</div></div>
+      <div class="stat done"><div class="stat-num" id="stat-done">0</div><div class="stat-label" data-i18n="statDone">Done</div></div>
+      <div class="stat skipped"><div class="stat-num" id="stat-skipped">0</div><div class="stat-label" data-i18n="statSkipped">Skipped</div></div>
+      <div class="stat p0"><div class="stat-num" id="stat-p0">0</div><div class="stat-label" data-i18n="statP0Open">P0 Open</div></div>
+    </div>
+
+    <div class="progress-wrapper">
+      <div class="progress-bar">
+        <div class="progress-done" id="bar-done"></div>
+        <div class="progress-skipped" id="bar-skipped"></div>
+      </div>
     </div>
 
   <div class="filters">
