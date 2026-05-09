@@ -1,0 +1,14 @@
+{
+  "name": "ai-task-flow",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Local-first AI task flow workspace.",
+  "type": "module",
+  "scripts": {
+    "serve": "node server.mjs",
+    "version:patch": "node scripts/bump-version.mjs patch",
+    "version:minor": "node scripts/bump-version.mjs minor",
+    "version:major": "node scripts/bump-version.mjs major",
+    "version:set": "node scripts/bump-version.mjs"
+  }
+}

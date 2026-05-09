@@ -12,7 +12,18 @@
     "execution_mode": "human_ai_collaboration",
     "test_strategy": "manual_and_targeted_automated_checks",
     "tracking_system": "tasks_json",
-    "task_categories": [],
+    "task_categories": [
+      {
+        "prefix": "PERF",
+        "label": "性能优化",
+        "labelKey": "categoryPerf"
+      },
+      {
+        "prefix": "DESIGN",
+        "label": "设计体验",
+        "labelKey": "categoryDesign"
+      }
+    ],
     "conventions": {
       "branch_pattern": "{type}/{TASK_ID}-{kebab-summary}",
       "commit_message_pattern": "{type}({scope}): {subject}",
@@ -38,5 +49,372 @@
       "used_by": []
     }
   },
-  "tasks": []
+  "tasks": [
+    {
+      "id": "PERF_001",
+      "title": "多人记分 +/− 步进器点击响应延迟优化",
+      "type": "bug",
+      "priority": "P1",
+      "status": "done",
+      "depends_on": [],
+      "blocks": [],
+      "scope": {
+        "allowed_paths_hint": [
+          "GolfHub iOS 多人记分相关 SwiftUI 视图",
+          "HoleScoring 场景下的 Stepper / 分数列组件",
+          "记分 ViewModel / Store / 状态管理层",
+          "draft/confirm 两层数据架构相关代码"
+        ],
+        "forbidden_paths_hint": [
+          "SBS 逐杆链路的核心数据模型",
+          "后端 API / 同步重试逻辑(除非确认是延迟根因)",
+          "地图与 LiDAR 相关模块"
+        ]
+      },
+      "anchors": {
+        "primary_files": [],
+        "primary_symbols": [],
+        "search_hints": [
+          "多人记分",
+          "Stepper",
+          "ScoreStepper",
+          "HoleScoring",
+          "ScoreRow",
+          "+1",
+          "-1",
+          "onTapGesture",
+          "Button(action",
+          "@Published",
+          "@StateObject",
+          "ObservableObject",
+          "draft",
+          "confirm"
+        ]
+      },
+      "problem": "在多人记分界面,点击每位球员分数行中的 +/− 步进器(中间显示当前杆数的横线/数字区域旁的加减按钮)时,UI 反馈不是即时的,从点击到数字变化存在零点几秒(感知上 ~200–500ms)的明显延迟。这种延迟在记分这种高频、低门槛的核心交互上非常致命:用户预期是 0 帧级别的视觉响应,任何可感知的滞后都会让人怀疑是不是没点中,从而重复点击,进一步放大错误。\n\n根据 GolfHub 已建立的 draft/confirm 两层数据架构原则,UI 应该只依赖 draft 层做即时更新,confirm/同步走静默重试。当前出现延迟,很可能是以下一种或多种原因:\n1. 点击事件直接触发了 confirm 层或网络/持久化写入,UI 等待回调后才刷新;\n2. 状态更新粒度过粗,整个记分页或整张 18 洞 scorecard 因为一次 +1 而重渲染,SwiftUI diff 成本过高;\n3. Button / Stepper 使用了带动画或带 haptic 同步等待的实现,默认动画时长 ~0.25s 被误读为'延迟';\n4. ObservableObject 的 @Published 在主线程上做了较重的计算(如总杆数、净杆、相对标准杆重新汇总)再发布,阻塞了帧;\n5. 列表用的是 List 而不是 LazyVStack,行级 identity 不稳定导致整行重建。\n\n需要先定位真实根因,再做最小改动让点击 → 数字变化在一帧内完成(<= 16ms 视觉反馈),并保留同步层的健壮性。",
+      "expected": "点击多人记分行的 + 或 − 按钮后:\n- 数字必须在下一帧立即变化(主观 0 延迟,实际 <= 16ms 内 UI 更新);\n- 连续快速点击(例如 1 秒点 5 下)每一次都有即时视觉反馈,不丢帧、不堆积;\n- 触觉反馈(若有)与视觉反馈同步或异步触发,不能成为视觉更新的前置阻塞;\n- 同步失败仍然按既有规则在该行显示黄色 sync-failure 指示,但绝不阻塞 +/− 的本地反馈;\n- 修复方案符合既有的 draft/confirm 两层数据架构: +/− 只改 draft,confirm/网络是后台异步任务。",
+      "constraints": [
+        "禁止改动 +/− 与 SBS 逐杆链路互斥的产品规则",
+        "禁止改变分数列右对齐的视觉规范",
+        "不得移除或弱化同步失败的黄色指示",
+        "不得为了消除延迟而绕过 draft/confirm 架构、直接乐观写远端",
+        "改动应聚焦多人记分这一交互,不要顺手重构整个 HoleScoring 屏",
+        "保留无障碍(VoiceOver / Dynamic Type)行为不退化"
+      ],
+      "acceptance": {
+        "unit_tests": [
+          {
+            "name": "test_stepper_increment_updates_draft_synchronously",
+            "assertion": "调用 +1 action 后,draft 层的该球员当前洞杆数立即 +1,且不依赖任何 async/await 完成"
+          },
+          {
+            "name": "test_stepper_does_not_trigger_confirm_on_each_tap",
+            "assertion": "连续点击 +/− 多次,confirm/远端同步任务被合并/防抖,而不是每次点击都同步触发"
+          },
+          {
+            "name": "test_sync_failure_does_not_rollback_draft",
+            "assertion": "模拟 confirm 失败,draft 层数值保持用户最后操作结果,黄色指示位被置位"
+          }
+        ],
+        "ui_tests": [
+          {
+            "name": "test_multiplayer_score_plus_button_immediate_feedback",
+            "assertion": "在多人记分屏点击 +,断言下一帧渲染中该行数字已更新"
+          },
+          {
+            "name": "test_rapid_tapping_no_dropped_updates",
+            "assertion": "1 秒内点击 + 五次,最终显示值相对初始值精确为 +5"
+          },
+          {
+            "name": "test_only_target_row_rerenders",
+            "assertion": "通过 SwiftUI 渲染计数/Self._printChanges 验证点击单行 +/− 不触发其他球员行重渲染"
+          }
+        ],
+        "manual_checks": [
+          "在真机上手动以正常节奏点击 +/−,主观感受为'立刻变化',无任何拖滞",
+          "开启 Xcode Instruments Time Profiler / Hitches,确认点击触发的主线程任务不超过一帧",
+          "断网情况下点击 +/− 仍立即响应,稍后联网后正确同步",
+          "对比修复前后录屏,确认延迟肉眼可辨地消失"
+        ]
+      },
+      "done_definition": [
+        "已定位延迟根因并在 PR 描述中写明(动画/同步阻塞/重渲染/计算阻塞 中的具体一项或多项)",
+        "+/− 点击的视觉反馈实现为帧级即时,无可感知延迟",
+        "draft/confirm 两层架构保持完整,同步失败黄色指示行为不变",
+        "新增 / 更新对应单元测试与 UI 测试并通过",
+        "在真机上完成手动验收清单",
+        "PR 中附带修复前后的对比录屏或 Instruments 截图"
+      ],
+      "tracking": {
+        "branch": "bug/PERF_XXX-multiplayer-score-stepper-latency",
+        "commit_prefix": "bug(perf)",
+        "pr_title": "[PERF_XXX] 多人记分 +/− 步进器点击零延迟反馈"
+      },
+      "raw_inputs": [
+        {
+          "source": "user_natural_language",
+          "text": "多人记分这里,发现点了这个 + - 中间这个横线 他不是0秒级的反馈 总共有零点几秒延迟 这里性能什么问题 请用话这个性能"
+        }
+      ],
+      "image_references": [
+        {
+          "name": "IMG_3642.jpg",
+          "type": "image/jpeg",
+          "size": 136253,
+          "path_hint": "./attachments/IMG_3642.jpg",
+          "path_note": "Browser drag-and-drop did not expose the absolute local path. If Codex needs to inspect this image, place or upload the file at this path_hint."
+        }
+      ],
+      "implementation_runs": [
+        {
+          "agent": "codex",
+          "status": "done",
+          "commit": "",
+          "summary": "定位多人记分 +/- 延迟根因为每次点击同步触发\n  commitDraft，导致 SwiftData 保存和同步调度进入点击路径。已改为点击仅\n  即时更新 draftScores，提交/同步通过防抖后台合并执行，并在确认、切洞、\n  关闭 sheet 时 flush，保持同步失败黄标和 draft/confirm 架构不变。",
+          "changed_files": [
+            "GolfScore/Features/Scorecard/Views/ScoreInputSheet.swift"
+          ],
+          "verification": [
+            "xcodebuild -project GolfScore.xcodeproj -scheme GolfScore\n  -destination 'generic/platform=iOS' build: BUILD SUCCEEDED",
+            "xcrun devicectl device install app --device CB0B5902-AC80-5532-\n  85A7-5871880DB75B .../GolfScore.app: App installed"
+          ],
+          "followups": [
+            "建议在真机上快速连点 +/- 验证主观响应，并用 Instruments Hitches/\n  Time Profiler 采样确认点击路径主线程无明显阻塞。"
+          ],
+          "completed_at": "2026-05-09T15:11:28.155Z"
+        }
+      ]
+    },
+    {
+      "id": "DESIGN_001",
+      "title": "多人记分页设计 Token 化改造",
+      "type": "refactor",
+      "priority": "P2",
+      "status": "open",
+      "depends_on": [],
+      "blocks": [],
+      "scope": {
+        "allowed_paths_hint": [
+          "GolfHub iOS 多人记分页(Multiplayer Scoring)相关 SwiftUI 视图",
+          "HoleScoring 场景下的分数行 / 步进器 / SBS 入口等子组件",
+          "全局设计系统 / Design Tokens 定义文件(颜色、字号、间距、圆角、阴影、动画时长等)",
+          "Color / Font / Spacing / Radius 等扩展或主题相关代码"
+        ],
+        "forbidden_paths_hint": [
+          "记分业务逻辑层(draft/confirm 数据架构、同步重试)",
+          "SBS 逐杆链路与编辑窗口的业务实现",
+          "地图、LiDAR、雷达等与多人记分无关模块",
+          "后端 API 与同步策略相关代码"
+        ]
+      },
+      "anchors": {
+        "primary_files": [],
+        "primary_symbols": [],
+        "search_hints": [
+          "多人记分",
+          "MultiplayerScoring",
+          "HoleScoring",
+          "ScoreRow",
+          "ScoreStepper",
+          "Color(",
+          ".font(",
+          ".padding(",
+          ".cornerRadius(",
+          "#hex",
+          "DesignTokens",
+          "Theme",
+          "Spacing",
+          "Radius",
+          "Typography"
+        ]
+      },
+      "problem": "当前多人记分页的视觉样式(颜色、字号、字重、间距、圆角、阴影、动画时长等)很可能直接散落在各个 SwiftUI 视图里,以硬编码字面量(如 .font(.system(size: 17)) 、 Color(hex: \"#1B5E20\")、 .padding(12) 、 .cornerRadius(8))的形式存在。这带来三个问题:\n1. 改一个颜色或一档字号需要在多处搜索替换,容易遗漏,长期会让多人记分页与 GolfHub 其它界面之间出现不一致;\n2. 缺少语义层(例如 color.score.primary、font.score.value、spacing.row.inset),设计意图被埋在数值里,新人/Claude Code 读代码看不出'这是分数主色'还是'这是分数失败态色';\n3. 后续做暗色模式、节日主题、Augusta 风等切换时,几乎没有杠杆点。\n\n本任务需要把多人记分页面所做的设计决策抽成一套可复用的 Design Tokens(设计语言变量层),并把页面内的硬编码值替换为对应 token 引用。Token 必须按语义命名而非按表象命名(如 colorScoreOverPar 而不是 colorRed),并优先复用 GolfHub 已有的全局设计系统(若存在);若不存在,则在多人记分页这个最关键的 UI 上先建立子集,作为后续推广的样板。\n\n这是一次纯重构:像素级视觉效果应保持不变或在合理范围内统一,业务逻辑、交互行为、组件公共 API 不变。",
+      "expected": "完成后:\n- 多人记分页 SwiftUI 文件中,几乎不再出现颜色字面量、固定字号、固定 spacing/radius 的魔法数字,全部替换为语义化 token 引用(例如 Theme.color.scoreValue、Theme.spacing.rowInset、Theme.radius.card、Theme.font.scoreValue 等);\n- 存在一份清晰、可被其它页面复用的 token 定义,按类别分组(Color / Typography / Spacing / Radius / Elevation / Motion 等),并附简短中文注释说明设计意图;\n- 多人记分页在视觉上与改造前像素级一致(允许仅做'本来就该统一但被遗漏'的细节修正,且需在 PR 描述中列出);\n- 后续若要换主色或调整间距档位,只需在 token 层一处修改即可联动整个多人记分页;\n- 改造与既有产品规则保持兼容: +/− 与 SBS 互斥、分数列右对齐、同步失败黄色指示等所有视觉表达通过 token 表达,不被弱化或丢失。",
+      "constraints": [
+        "纯设计语言 / Token 化重构,不改变多人记分页的业务逻辑与交互行为",
+        "不修改 draft/confirm 两层数据架构相关代码",
+        "Token 命名必须语义化(scoreValue / overPar / underPar / syncFailure 等),禁止用 colorRed / colorGreen 这类描述外观的命名",
+        "若项目已有全局设计系统,优先扩展复用,不另起炉灶;若没有,新建的 token 文件需放在可被全局复用的位置而非多人记分页内部",
+        "Token 必须支持后续暗色模式扩展(Color 使用 dynamic / asset catalog / 双值定义,而不是写死一个 hex)",
+        "改造范围严格限定在多人记分页及其直接子组件,不顺手改造其它页面",
+        "硬编码值替换必须保持视觉一致;任何主动的视觉统一调整都要在 PR 描述里单独列出并附前后对比"
+      ],
+      "acceptance": {
+        "unit_tests": [
+          {
+            "name": "test_design_tokens_exposed",
+            "assertion": "Theme/DesignTokens 中至少导出多人记分页所需的 color / font / spacing / radius 语义键,且类型可被 SwiftUI View 直接消费"
+          },
+          {
+            "name": "test_no_hardcoded_hex_in_multiplayer_scoring",
+            "assertion": "通过静态扫描或测试断言,多人记分页相关源文件中不存在裸写的十六进制颜色字符串与裸写的 .font(.system(size:)) 字面量"
+          }
+        ],
+        "ui_tests": [
+          {
+            "name": "test_multiplayer_scoring_visual_snapshot_unchanged",
+            "assertion": "多人记分页在常规状态、超标准杆、低于标准杆、同步失败状态下的快照与改造前快照保持一致(或仅有 PR 中明确列出的差异)"
+          },
+          {
+            "name": "test_token_swap_propagates",
+            "assertion": "在测试中替换某个 token(如 scoreValue 颜色)后,该页面所有引用处同步变化,无遗漏的硬编码点位"
+          }
+        ],
+        "manual_checks": [
+          "在真机上对比改造前后多人记分页,主观视觉一致",
+          "Code review 检查 token 命名语义化、分组合理、注释清晰",
+          "尝试在 token 层修改一项颜色 / 一档间距,确认全页面联动",
+          "确认产品规则的视觉表达(同步失败黄色、分数列右对齐等)在 token 化后仍正确呈现"
+        ]
+      },
+      "done_definition": [
+        "多人记分页内的视觉硬编码值已全部替换为语义化 token 引用",
+        "Design Tokens 文件 / 模块已建立或扩展,具备 Color / Typography / Spacing / Radius / Motion 等基础类别",
+        "Token 命名为语义化命名,并具备暗色模式扩展能力",
+        "改造前后视觉快照一致,差异在 PR 中显式说明",
+        "新增 / 更新对应静态扫描或快照测试并通过",
+        "PR 描述中附:token 清单概览 + 多人记分页改造前后对比截图"
+      ],
+      "tracking": {
+        "branch": "design/DESIGN_XXX-multiplayer-scoring-tokenize",
+        "commit_prefix": "refactor(design)",
+        "pr_title": "[DESIGN_XXX] 多人记分页设计 Token 化改造"
+      },
+      "raw_inputs": [
+        {
+          "source": "user_natural_language",
+          "text": "将多人记页,进行token设计语言化。"
+        }
+      ],
+      "image_references": [],
+      "implementation_runs": []
+    },
+    {
+      "id": "DESIGN_002",
+      "title": "多人记分页 Token 化 + 隐藏发球台名缩减横向占用",
+      "type": "refactor",
+      "priority": "P2",
+      "status": "open",
+      "depends_on": [],
+      "blocks": [],
+      "scope": {
+        "allowed_paths_hint": [
+          "GolfHub iOS 多人记分页(Multiplayer Scoring)相关 SwiftUI 视图",
+          "HoleScoring 场景下的分数行 / 步进器 / 头部信息条等子组件",
+          "全局设计系统 / Design Tokens 定义文件(颜色、字号、字重、间距、圆角、阴影、动画时长等)",
+          "Color / Font / Spacing / Radius 等扩展或主题相关代码",
+          "记分页头部展示发球台(Tee)信息的视图/格式化函数"
+        ],
+        "forbidden_paths_hint": [
+          "记分业务逻辑层(draft/confirm 数据架构、同步重试)",
+          "SBS 逐杆链路与编辑窗口的业务实现",
+          "地图、LiDAR、雷达等与多人记分无关模块",
+          "后端 API 与同步策略相关代码",
+          "发球台数据模型本身(只改展示,不改数据)"
+        ]
+      },
+      "anchors": {
+        "primary_files": [],
+        "primary_symbols": [],
+        "search_hints": [
+          "多人记分",
+          "MultiplayerScoring",
+          "HoleScoring",
+          "ScoreRow",
+          "ScoreStepper",
+          "Tee",
+          "发球台",
+          "TeeBox",
+          "TeeName",
+          "Color(",
+          ".font(",
+          ".padding(",
+          ".cornerRadius(",
+          "#hex",
+          "DesignTokens",
+          "Theme",
+          "Spacing",
+          "Radius",
+          "Typography"
+        ]
+      },
+      "problem": "本任务包含两件事,合并在一个 PR 内完成,因为它们都聚焦于多人记分页的视觉/版式层,改动范围高度重叠:\n\n1) 设计语言 Token 化\n当前多人记分页的视觉样式(颜色、字号、字重、间距、圆角、阴影、动画时长等)很可能直接散落在各 SwiftUI 视图里以硬编码字面量形式存在(如 .font(.system(size: 17))、Color(hex: \"#1B5E20\")、.padding(12)、.cornerRadius(8))。这导致改一个值要多处搜索替换、缺乏语义层、无法支撑暗色模式和主题切换。需要把多人记分页所做的设计决策抽成一套语义化 Design Tokens(scoreValue / overPar / underPar / syncFailure / rowInset / cardRadius 等),并把页面内硬编码值替换为 token 引用。优先扩展 GolfHub 已有的全局设计系统,若没有则建立一份可被全局复用的子集。\n\n2) 隐藏发球台名以缩减横向空间\n多人记分页头部当前会显示发球台名(如 \"白 Tee\"、\"金 Tee\"、\"Blue Tee\")。在多人 + 多列分数 + 18 洞导航的版式压力下,这个名字在小屏(尤其 iPhone 标准宽度,Dynamic Type 较大时)挤占了关键的横向空间,导致分数列和步进器布局更紧、易截断。需求是不再展示发球台名字,把空间还给真正的核心信息(球员、当前洞、分数、+/−)。这是纯展示层处理:发球台数据(颜色/距离/标准杆等)仍在数据层保留并可在其它地方使用,只是头部那一处文字标签隐藏。\n\n两件事在多人记分页内是同一片区域的工作,放一起做避免一次像素调整两次回归。这是一次纯设计/版式层重构,不动业务逻辑、交互行为、组件公共 API。",
+      "expected": "完成后:\n- 多人记分页 SwiftUI 文件中,几乎不再出现颜色字面量、固定字号、固定 spacing/radius 的魔法数字,全部替换为语义化 token 引用(Theme.color.* / Theme.font.* / Theme.spacing.* / Theme.radius.* 等);\n- 存在一份清晰、按类别分组(Color / Typography / Spacing / Radius / Elevation / Motion)、带中文意图注释的 token 定义,可被其它页面复用;\n- token 命名语义化、可扩展暗色模式;\n- 多人记分页头部不再显示发球台名字文本;原本被该文本占据的横向空间被合理回收(让分数列更舒展,而不是新增空白);\n- 发球台数据本身保留,后续若产品决定换种方式表达(如颜色色块、tap 弹层),仍可基于现有数据实现;\n- 除\"发球台名字消失\"这一明确视觉差异外,其余视觉效果与改造前像素级一致;\n- 产品规则的视觉表达(+/− 与 SBS 互斥、分数列右对齐、同步失败黄色指示等)通过 token 表达,不被弱化或丢失;\n- 后续若要换主色或调整间距档位,只需在 token 层一处修改即可联动整个多人记分页。",
+      "constraints": [
+        "纯设计语言 / 版式层重构,不改变多人记分页的业务逻辑与交互行为",
+        "不修改 draft/confirm 两层数据架构相关代码",
+        "Token 命名必须语义化(scoreValue / overPar / underPar / syncFailure / rowInset / cardRadius 等),禁止用 colorRed / colorGreen / size17 这类描述外观的命名",
+        "若项目已有全局设计系统,优先扩展复用,不另起炉灶;若没有,新建的 token 文件需放在可被全局复用的位置而非多人记分页内部",
+        "Color token 必须支持后续暗色模式(dynamic / asset catalog / 双值定义,而非写死 hex)",
+        "改造范围严格限定在多人记分页及其直接子组件,不顺手改造其它页面",
+        "硬编码值替换必须保持视觉一致;主动的视觉统一调整需在 PR 描述里单独列出并附前后对比",
+        "发球台名仅做展示层隐藏,不得删除模型字段、不得清空数据、不得断开后续可能的使用",
+        "回收的横向空间应让既有列布局自然受益(增大分数区或球员名宽度),禁止留下视觉空洞或硬塞新元素",
+        "发球台名字隐藏需对所有支持的发球台类型一致生效,不存在某些颜色仍泄漏文字的情况"
+      ],
+      "acceptance": {
+        "unit_tests": [
+          {
+            "name": "test_design_tokens_exposed",
+            "assertion": "Theme/DesignTokens 中至少导出多人记分页所需的 color / font / spacing / radius 语义键,且类型可被 SwiftUI View 直接消费"
+          },
+          {
+            "name": "test_no_hardcoded_hex_in_multiplayer_scoring",
+            "assertion": "通过静态扫描或测试断言,多人记分页相关源文件中不存在裸写的十六进制颜色字符串与裸写的 .font(.system(size:)) 字面量"
+          },
+          {
+            "name": "test_tee_name_not_rendered_in_header",
+            "assertion": "多人记分页头部视图在测试渲染中不输出发球台名文本节点(对所有发球台类型用例均成立)"
+          },
+          {
+            "name": "test_tee_data_model_intact",
+            "assertion": "发球台数据模型字段仍存在且可被读取,仅展示层不再使用其名称字段"
+          }
+        ],
+        "ui_tests": [
+          {
+            "name": "test_multiplayer_scoring_visual_snapshot_matches_new_baseline",
+            "assertion": "多人记分页在常规、超标准杆、低于标准杆、同步失败等状态下的快照与新基线一致;新基线相对旧基线的差异仅为发球台名字段消失及由此带来的间距收紧"
+          },
+          {
+            "name": "test_token_swap_propagates",
+            "assertion": "在测试中替换某个 token(如 scoreValue 颜色)后,该页面所有引用处同步变化,无遗漏的硬编码点位"
+          },
+          {
+            "name": "test_no_horizontal_truncation_on_small_devices",
+            "assertion": "在最小支持机型 + 较大 Dynamic Type 下,多人记分页分数行不再因发球台名挤占而出现关键信息截断"
+          }
+        ],
+        "manual_checks": [
+          "在真机上对比改造前后多人记分页,确认仅发球台名隐藏且空间回收合理,其余视觉一致",
+          "Code review 检查 token 命名语义化、分组合理、注释清晰",
+          "尝试在 token 层修改一项颜色 / 一档间距,确认全页面联动",
+          "确认产品规则的视觉表达(同步失败黄色、分数列右对齐等)在 token 化后仍正确呈现",
+          "使用多种发球台数据(白/金/蓝/红等)进入多人记分页,均不出现发球台名字文本"
+        ]
+      },
+      "done_definition": [
+        "多人记分页内的视觉硬编码值已全部替换为语义化 token 引用",
+        "Design Tokens 文件 / 模块已建立或扩展,具备 Color / Typography / Spacing / Radius / Motion 等基础类别,且具备暗色模式扩展能力",
+        "多人记分页头部不再展示发球台名字,横向空间被合理回收",
+        "发球台数据模型保持不变,仅展示层调整",
+        "改造前后视觉快照符合新基线,差异在 PR 中显式说明",
+        "新增 / 更新对应静态扫描、单元、快照、UI 测试并通过",
+        "PR 描述中附:token 清单概览 + 多人记分页改造前后对比截图(覆盖小屏与大 Dynamic Type 场景)"
+      ],
+      "tracking": {
+        "branch": "design/DESIGN_XXX-multiplayer-scoring-tokenize-hide-tee-name",
+        "commit_prefix": "refactor(design)",
+        "pr_title": "[DESIGN_XXX] 多人记分页 Token 化并隐藏发球台名"
+      },
+      "raw_inputs": [
+        {
+          "source": "user_natural_language",
+          "text": "将多人记分页设计语言Token化,去掉发球台的名字缩短横向空间占用。"
+        }
+      ],
+      "image_references": [],
+      "implementation_runs": []
+    }
+  ]
 }
