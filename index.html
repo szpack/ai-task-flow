@@ -169,27 +169,55 @@
   .progress-skipped { background: var(--skipped); }
   .progress-bar > div { height: 100%; transition: width 0.3s; }
 
+  .workspace-section {
+    border: 1px solid rgba(245, 224, 143, 0.16);
+    border-radius: 8px;
+    padding: 14px;
+    margin: 18px 0;
+    background: rgba(245, 224, 143, 0.045);
+    box-shadow: inset 0 1px 0 rgba(245, 224, 143, 0.06);
+  }
+  .workspace-section.stats-section {
+    background: rgba(245, 224, 143, 0.035);
+  }
+  .workspace-section.workflow-section {
+    background: rgba(31, 90, 61, 0.28);
+    border-color: rgba(245, 224, 143, 0.20);
+  }
+  .workspace-section.library-section {
+    background: rgba(10, 40, 24, 0.34);
+    border-color: rgba(212, 180, 106, 0.28);
+  }
+  .workspace-section.prompt-section {
+    background: rgba(31, 90, 61, 0.18);
+  }
+  .workspace-section.backfill-section {
+    background: rgba(245, 224, 143, 0.035);
+  }
+
   /* Workflow */
   .workflow {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
     gap: 8px;
-    margin: 18px 0;
+    margin: 0;
+    overflow-x: auto;
+    padding-bottom: 2px;
   }
   .workflow-step {
     background: var(--masters-card);
     border: 1px solid rgba(245, 224, 143, 0.14);
     border-radius: 6px;
-    padding: 10px 12px;
+    padding: 9px 10px;
     color: var(--cream-secondary);
-    min-width: 0;
+    min-width: 180px;
   }
   .workflow-step-title {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 7px;
     color: var(--cream-text);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     margin-bottom: 4px;
   }
@@ -208,9 +236,9 @@
     flex-shrink: 0;
   }
   .workflow-step-copy {
-    font-size: 12px;
-    line-height: 1.45;
-    margin-bottom: 8px;
+    font-size: 11px;
+    line-height: 1.35;
+    margin-bottom: 7px;
   }
   .workflow-link {
     border: 0;
@@ -234,6 +262,12 @@
     padding-bottom: 8px;
     border-bottom: 1px solid var(--masters-line);
     scroll-margin-top: 82px;
+  }
+  .workspace-section > .section-heading:first-child {
+    margin-top: 0;
+  }
+  .workspace-section > .section-heading:last-child {
+    margin-bottom: 0;
   }
   .section-title {
     font-size: 15px;
@@ -882,9 +916,6 @@
   }
 
   @media (max-width: 1000px) {
-    .workflow {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
     .manager,
     .new-task-grid {
       grid-template-columns: 1fr;
@@ -909,9 +940,6 @@
       grid-template-columns: repeat(5, minmax(54px, 1fr));
       overflow-x: auto;
       padding-bottom: 2px;
-    }
-    .workflow {
-      grid-template-columns: 1fr;
     }
     .section-heading {
       align-items: flex-start;
@@ -966,48 +994,53 @@
 
   <div id="current-pin"></div>
 
-  <div class="stats">
-    <div class="stat open"><div class="stat-num" id="stat-open">0</div><div class="stat-label" data-i18n="statOpen">Open</div></div>
-    <div class="stat in-progress"><div class="stat-num" id="stat-progress">0</div><div class="stat-label" data-i18n="statCurrent">In Progress</div></div>
-    <div class="stat done"><div class="stat-num" id="stat-done">0</div><div class="stat-label" data-i18n="statDone">Done</div></div>
-    <div class="stat skipped"><div class="stat-num" id="stat-skipped">0</div><div class="stat-label" data-i18n="statSkipped">Skipped</div></div>
-    <div class="stat p0"><div class="stat-num" id="stat-p0">0</div><div class="stat-label" data-i18n="statP0Open">P0 Open</div></div>
-  </div>
-
-  <div class="progress-wrapper">
-    <div class="progress-bar">
-      <div class="progress-done" id="bar-done"></div>
-      <div class="progress-skipped" id="bar-skipped"></div>
+  <section class="workspace-section stats-section">
+    <div class="stats">
+      <div class="stat open"><div class="stat-num" id="stat-open">0</div><div class="stat-label" data-i18n="statOpen">Open</div></div>
+      <div class="stat in-progress"><div class="stat-num" id="stat-progress">0</div><div class="stat-label" data-i18n="statCurrent">In Progress</div></div>
+      <div class="stat done"><div class="stat-num" id="stat-done">0</div><div class="stat-label" data-i18n="statDone">Done</div></div>
+      <div class="stat skipped"><div class="stat-num" id="stat-skipped">0</div><div class="stat-label" data-i18n="statSkipped">Skipped</div></div>
+      <div class="stat p0"><div class="stat-num" id="stat-p0">0</div><div class="stat-label" data-i18n="statP0Open">P0 Open</div></div>
     </div>
-  </div>
 
-  <div class="workflow" id="workflow">
-    <section class="workflow-step">
-      <div class="workflow-step-title"><span class="workflow-step-num">1</span><span data-i18n="workflowCollectTitle">Capture</span></div>
-      <div class="workflow-step-copy" data-i18n="workflowCollectCopy">Create a task from a rough idea.</div>
-      <button class="workflow-link" data-workflow-action="new" data-i18n="workflowCollectAction">New Task</button>
-    </section>
-    <section class="workflow-step">
-      <div class="workflow-step-title"><span class="workflow-step-num">2</span><span data-i18n="workflowChooseTitle">Choose</span></div>
-      <div class="workflow-step-copy" data-i18n="workflowChooseCopy">Select one or more tasks for AI.</div>
-      <button class="workflow-link" data-workflow-action="tasks" data-i18n="workflowChooseAction">Go to task library</button>
-    </section>
-    <section class="workflow-step">
-      <div class="workflow-step-title"><span class="workflow-step-num">3</span><span data-i18n="workflowPromptTitle">Prompt</span></div>
-      <div class="workflow-step-copy" data-i18n="workflowPromptCopy">Generate a focused coding prompt.</div>
-      <button class="workflow-link" data-workflow-action="prompt" data-i18n="workflowPromptAction">Generate prompt</button>
-    </section>
-    <section class="workflow-step">
-      <div class="workflow-step-title"><span class="workflow-step-num">4</span><span data-i18n="workflowBackfillTitle">Backfill</span></div>
-      <div class="workflow-step-copy" data-i18n="workflowBackfillCopy">Paste AI results back into the task.</div>
-      <button class="workflow-link" data-workflow-action="backfill" data-i18n="workflowBackfillAction">Backfill result</button>
-    </section>
-  </div>
+    <div class="progress-wrapper">
+      <div class="progress-bar">
+        <div class="progress-done" id="bar-done"></div>
+        <div class="progress-skipped" id="bar-skipped"></div>
+      </div>
+    </div>
+  </section>
 
-  <div class="section-heading" id="task-library-section">
-    <div class="section-title" data-i18n="taskLibraryTitle">Task Library</div>
-    <div class="section-copy" data-i18n="taskLibraryCopy">Filter, inspect, select, or pin tasks.</div>
-  </div>
+  <section class="workspace-section workflow-section">
+    <div class="workflow" id="workflow">
+      <section class="workflow-step">
+        <div class="workflow-step-title"><span class="workflow-step-num">1</span><span data-i18n="workflowCollectTitle">Capture</span></div>
+        <div class="workflow-step-copy" data-i18n="workflowCollectCopy">Create a task from a rough idea.</div>
+        <button class="workflow-link" data-workflow-action="new" data-i18n="workflowCollectAction">New Task</button>
+      </section>
+      <section class="workflow-step">
+        <div class="workflow-step-title"><span class="workflow-step-num">2</span><span data-i18n="workflowChooseTitle">Choose</span></div>
+        <div class="workflow-step-copy" data-i18n="workflowChooseCopy">Select one or more tasks for AI.</div>
+        <button class="workflow-link" data-workflow-action="tasks" data-i18n="workflowChooseAction">Go to task library</button>
+      </section>
+      <section class="workflow-step">
+        <div class="workflow-step-title"><span class="workflow-step-num">3</span><span data-i18n="workflowPromptTitle">Prompt</span></div>
+        <div class="workflow-step-copy" data-i18n="workflowPromptCopy">Generate a focused coding prompt.</div>
+        <button class="workflow-link" data-workflow-action="prompt" data-i18n="workflowPromptAction">Generate prompt</button>
+      </section>
+      <section class="workflow-step">
+        <div class="workflow-step-title"><span class="workflow-step-num">4</span><span data-i18n="workflowBackfillTitle">Backfill</span></div>
+        <div class="workflow-step-copy" data-i18n="workflowBackfillCopy">Paste AI results back into the task.</div>
+        <button class="workflow-link" data-workflow-action="backfill" data-i18n="workflowBackfillAction">Backfill result</button>
+      </section>
+    </div>
+  </section>
+
+  <section class="workspace-section library-section">
+    <div class="section-heading" id="task-library-section">
+      <div class="section-title" data-i18n="taskLibraryTitle">Task Library</div>
+      <div class="section-copy" data-i18n="taskLibraryCopy">Filter, inspect, select, or pin tasks.</div>
+    </div>
 
   <div class="filters">
     <div class="filter-group">
@@ -1034,7 +1067,9 @@
   </div>
 
   <div id="task-list"></div>
+  </section>
 
+  <section class="workspace-section prompt-section">
   <div class="section-heading" id="prompt-section">
     <div class="section-title" data-i18n="promptSectionTitle">AI Prompt Handoff</div>
     <div class="section-copy" data-i18n="promptSectionCopy">Use selected tasks to create a coding prompt.</div>
@@ -1050,7 +1085,9 @@
     <textarea class="manager-field manager-output" id="dev-prompt-output" data-i18n-placeholder="devPromptPlaceholder" placeholder="Select tasks and generate a Codex / Claude development prompt here"></textarea>
     <button class="field-copy-btn" data-copy-target="dev-prompt-output" data-i18n-title="copy" data-i18n-aria="copyDevPrompt" title="Copy" aria-label="Copy development prompt">⧉</button>
   </div>
+  </section>
 
+  <section class="workspace-section backfill-section">
   <div class="section-heading" id="backfill-section">
     <div class="section-title" data-i18n="backfillSectionTitle">Execution Backfill</div>
     <div class="section-copy" data-i18n="backfillSectionCopy">Store the AI result with the task record.</div>
@@ -1068,6 +1105,7 @@
       <textarea class="manager-field manager-output short" id="run-result" readonly data-i18n-placeholder="runResultPlaceholder" placeholder="Backfill result"></textarea>
     </section>
   </div>
+  </section>
 
 </div>
 
