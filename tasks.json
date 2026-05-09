@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "project_context": {
-    "name": "AI Task Flow Demo",
-    "description": "A generic example backlog for AI-assisted development workflows.",
+    "name": "AI Task Flow",
+    "description": "A generic task flow workspace for collecting requirements, structuring tasks, handing them to AI, and backfilling execution results.",
     "platform": "Web",
     "tech_stack": {
       "language": "HTML/CSS/JavaScript",
@@ -12,243 +12,31 @@
     "execution_mode": "human_ai_collaboration",
     "test_strategy": "manual_and_targeted_automated_checks",
     "tracking_system": "tasks_json",
-    "task_categories": [
-      { "prefix": "IDEA", "label": "Idea Intake" },
-      { "prefix": "TASK", "label": "Structured Tasks" },
-      { "prefix": "PROMPT", "label": "AI Prompts" },
-      { "prefix": "RUN", "label": "Execution Backfill" },
-      { "prefix": "GLOBAL", "label": "Global Experience" }
-    ],
+    "task_categories": [],
     "conventions": {
       "branch_pattern": "{type}/{TASK_ID}-{kebab-summary}",
       "commit_message_pattern": "{type}({scope}): {subject}",
-      "commit_types": ["fix", "feat", "refactor", "style", "perf", "test", "docs"],
+      "commit_types": [
+        "fix",
+        "feat",
+        "refactor",
+        "style",
+        "perf",
+        "test",
+        "docs"
+      ],
       "pr_title_pattern": "[{TASK_ID}] {title}"
     }
   },
   "shared_components": {
     "structured_task_schema": {
       "description": "A task record should preserve intent, scope, constraints, acceptance checks, tracking metadata, and implementation runs.",
-      "used_by": ["IDEA_001", "TASK_001", "RUN_001"]
+      "used_by": []
     },
     "ai_handoff_loop": {
       "description": "Rough idea -> structured task -> prompt -> AI implementation -> structured result backfill.",
-      "used_by": ["PROMPT_001", "RUN_001"]
+      "used_by": []
     }
   },
-  "tasks": [
-    {
-      "id": "IDEA_001",
-      "title": "Turn rough ideas into structured task JSON",
-      "type": "feature",
-      "priority": "P0",
-      "status": "open",
-      "depends_on": [],
-      "blocks": ["TASK_001"],
-      "scope": {
-        "allowed_paths_hint": ["index.html", "tasks.json"],
-        "forbidden_paths_hint": ["Unrelated styling changes"]
-      },
-      "anchors": {
-        "primary_files": ["index.html"],
-        "primary_symbols": ["buildStructurePrompt", "normalizeImportedTask"],
-        "search_hints": ["buildStructurePrompt", "normalizeImportedTask", "import-json"]
-      },
-      "problem": "Important product ideas often start as messy notes. They need to become consistent task records before an AI coding agent can execute them reliably.",
-      "expected": "Users can paste a rough idea, generate a prompt for an AI model, and import the returned structured JSON into the task library.",
-      "constraints": [
-        "Imported tasks must have stable IDs",
-        "The output should preserve scope, constraints, acceptance checks, and tracking metadata",
-        "The default workflow must not require any private project files"
-      ],
-      "acceptance": {
-        "manual_checks": [
-          "Paste a rough feature request and generate a structure prompt",
-          "Import a valid task JSON returned by an AI model",
-          "Confirm the imported task appears in the list and can be selected"
-        ]
-      },
-      "done_definition": [
-        "The task intake flow works from a fresh checkout",
-        "No private project-specific token files are required"
-      ],
-      "tracking": {
-        "branch": "feat/IDEA_001-structured-intake",
-        "commit_prefix": "feat(idea)",
-        "pr_title": "[IDEA_001] Structured AI task intake"
-      },
-      "raw_inputs": [],
-      "implementation_runs": []
-    },
-    {
-      "id": "TASK_001",
-      "title": "Track a structured task through its lifecycle",
-      "type": "feature",
-      "priority": "P1",
-      "status": "open",
-      "depends_on": ["IDEA_001"],
-      "blocks": ["PROMPT_001"],
-      "scope": {
-        "allowed_paths_hint": ["tasks.json", "index.html"],
-        "forbidden_paths_hint": []
-      },
-      "anchors": {
-        "primary_files": ["tasks.json"],
-        "primary_symbols": ["tasks", "status", "acceptance"],
-        "search_hints": ["status", "depends_on", "done_definition"]
-      },
-      "problem": "A structured task should be more than a title. It needs enough context for a human or AI agent to understand scope, constraints, acceptance checks, and tracking metadata.",
-      "expected": "Each task record can move from open to done or skipped while preserving its problem statement, expected result, scope hints, acceptance checks, and implementation history.",
-      "constraints": [
-        "Use stable task IDs",
-        "Keep lifecycle state explicit",
-        "Do not mix execution results into the original problem statement"
-      ],
-      "acceptance": {
-        "manual_checks": [
-          "Expand TASK_001 in the viewer",
-          "Confirm problem, expected result, constraints, scope, and acceptance sections are visible",
-          "Mark it done and reset it back to open"
-        ]
-      },
-      "done_definition": [
-        "A user can understand the task lifecycle from this example alone"
-      ],
-      "tracking": {
-        "branch": "feat/TASK_001-structured-task-lifecycle",
-        "commit_prefix": "feat(task)",
-        "pr_title": "[TASK_001] Structured task lifecycle example"
-      },
-      "raw_inputs": [],
-      "implementation_runs": []
-    },
-    {
-      "id": "PROMPT_001",
-      "title": "Generate AI coding prompts from selected tasks",
-      "type": "feature",
-      "priority": "P0",
-      "status": "open",
-      "depends_on": ["TASK_001"],
-      "blocks": ["RUN_001"],
-      "scope": {
-        "allowed_paths_hint": ["index.html"],
-        "forbidden_paths_hint": []
-      },
-      "anchors": {
-        "primary_files": ["index.html"],
-        "primary_symbols": ["buildDevPrompt", "taskPromptBlock", "selectedTasks"],
-        "search_hints": ["buildDevPrompt", "taskPromptBlock", "dev-prompt-output"]
-      },
-      "problem": "AI coding agents need compact, precise task context. Copying raw backlog text by hand is slow and loses constraints.",
-      "expected": "Selecting one or more tasks generates a development prompt that includes problem, expected behavior, constraints, scope hints, acceptance checks, and done definition.",
-      "constraints": [
-        "Generated prompts should be project-aware through project_context",
-        "The prompt should ask the agent to return structured execution results",
-        "The output must remain readable when multiple tasks are selected"
-      ],
-      "acceptance": {
-        "manual_checks": [
-          "Select IDEA_001 and PROMPT_001",
-          "Generate the development prompt",
-          "Confirm both task blocks and the structured result schema are present"
-        ]
-      },
-      "done_definition": [
-        "Prompt generation works for one or multiple selected tasks"
-      ],
-      "tracking": {
-        "branch": "feat/PROMPT_001-ai-coding-prompts",
-        "commit_prefix": "feat(prompt)",
-        "pr_title": "[PROMPT_001] Generate AI coding prompts"
-      },
-      "raw_inputs": [],
-      "implementation_runs": []
-    },
-    {
-      "id": "RUN_001",
-      "title": "Backfill structured AI execution results",
-      "type": "feature",
-      "priority": "P1",
-      "status": "open",
-      "depends_on": ["PROMPT_001"],
-      "blocks": [],
-      "scope": {
-        "allowed_paths_hint": ["index.html", "tasks.json"],
-        "forbidden_paths_hint": []
-      },
-      "anchors": {
-        "primary_files": ["index.html"],
-        "primary_symbols": ["btn-apply-run", "implementation_runs"],
-        "search_hints": ["implementation_runs", "run-json", "btn-apply-run"]
-      },
-      "problem": "After an AI agent finishes implementation, its result should not disappear into chat history. The result needs to be stored with the task.",
-      "expected": "Users can paste a structured result JSON and append it to the corresponding task's implementation_runs array.",
-      "constraints": [
-        "Support task_id and task_ids",
-        "Preserve changed_files, verification, followups, summary, and commit",
-        "Allow exporting the updated tasks.json"
-      ],
-      "acceptance": {
-        "manual_checks": [
-          "Paste a run result JSON for PROMPT_001",
-          "Apply the run result",
-          "Expand the task and confirm the implementation run appears",
-          "Export tasks.json and confirm the run was included"
-        ]
-      },
-      "done_definition": [
-        "Structured execution results can be stored and exported"
-      ],
-      "tracking": {
-        "branch": "feat/RUN_001-result-backfill",
-        "commit_prefix": "feat(run)",
-        "pr_title": "[RUN_001] Backfill structured AI execution results"
-      },
-      "raw_inputs": [],
-      "implementation_runs": []
-    },
-    {
-      "id": "GLOBAL_001",
-      "title": "Keep the project local-first and dependency-light",
-      "type": "docs",
-      "priority": "P2",
-      "status": "done",
-      "depends_on": [],
-      "blocks": [],
-      "scope": {
-        "allowed_paths_hint": ["README.md", "index.html"],
-        "forbidden_paths_hint": []
-      },
-      "anchors": {
-        "primary_files": ["README.md"],
-        "primary_symbols": [],
-        "search_hints": ["localStorage", "tasks.json", "http.server"]
-      },
-      "problem": "The tool should be easy to clone, inspect, and run without a backend or private design system.",
-      "expected": "A fresh checkout runs with a static HTTP server and only needs index.html plus tasks.json.",
-      "constraints": [
-        "No build step required",
-        "No external design token files required",
-        "Example project data should live under examples/"
-      ],
-      "acceptance": {
-        "manual_checks": [
-          "Run python3 -m http.server 8000",
-          "Open http://localhost:8000/",
-          "Confirm tasks load successfully"
-        ]
-      },
-      "done_definition": [
-        "The default project data is generic",
-        "Private project data is only used as an example"
-      ],
-      "tracking": {
-        "branch": "docs/GLOBAL_001-local-first",
-        "commit_prefix": "docs(global)",
-        "pr_title": "[GLOBAL_001] Document local-first setup"
-      },
-      "raw_inputs": [],
-      "implementation_runs": []
-    }
-  ]
+  "tasks": []
 }
